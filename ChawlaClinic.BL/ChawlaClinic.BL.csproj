@@ -4,7 +4,13 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>ChawlaClinic_API</RootNamespace>
+    <RootNamespace>ChawlaClinic.BL</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="DTOs\" />
+    <Folder Include="Services\" />
+    <Folder Include="ServiceInterfaces\" />
+  </ItemGroup>
 
 </Project>

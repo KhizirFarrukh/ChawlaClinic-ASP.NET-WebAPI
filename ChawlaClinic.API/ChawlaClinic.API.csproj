@@ -4,7 +4,11 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>ChawlaClinic_BL</RootNamespace>
+    <RootNamespace>ChawlaClinic.API</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChawlaClinic.Common\ChawlaClinic.Common.csproj" />
+  </ItemGroup>
 
 </Project>
