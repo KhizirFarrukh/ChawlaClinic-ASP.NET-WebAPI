@@ -1,4 +1,5 @@
-﻿using ChawlaClinic.BL.DTOs.User;
+﻿using ChawlaClinic.API.Models;
+using ChawlaClinic.BL.DTOs.User;
 using ChawlaClinic.Common.Commons;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +12,7 @@ namespace ChawlaClinic.API.Controller
         [HttpPost("AddUser")]
         public IActionResult AddUser(AddUserDTO dto)
         {
-            return Ok();
+            return Ok(new JSONResponse());
         }
     }
 }

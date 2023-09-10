@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ChawlaClinic.Common.Commons;
 
-namespace ChawlaClinic.API.Controller
+namespace ChawlaClinic.API.Controllers
 {
     [Route(DeveloperConstants.ENDPOINT_PREFIX)]
     [ApiController]
