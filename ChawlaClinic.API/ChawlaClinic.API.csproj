@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ChawlaClinic.BL\ChawlaClinic.BL.csproj" />
     <ProjectReference Include="..\ChawlaClinic.Common\ChawlaClinic.Common.csproj" />
   </ItemGroup>
 
