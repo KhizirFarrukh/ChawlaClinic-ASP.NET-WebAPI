@@ -1,6 +1,7 @@
 ﻿using ChawlaClinic.BL.DTOs.User;
 using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
+using ChawlaClinic.Common.Helpers;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +41,7 @@ namespace ChawlaClinic.BL.Services
             byte[] PasswordHash;
             byte[] PasswordSalt;
 
-            (PasswordHash, PasswordSalt) = PasswordHashing(dto.Password1);
+            (PasswordHash, PasswordSalt) = CommonHelper.PasswordHashSalt(dto.Password1);
 
             _context.Users.Add(new User
             {
@@ -94,9 +95,6 @@ namespace ChawlaClinic.BL.Services
             return usersDtos;
         }
 
-        private (byte[], byte[]) PasswordHashing(string password)
-        {
-            return (null, null);
-        }
+        
     }
 }
