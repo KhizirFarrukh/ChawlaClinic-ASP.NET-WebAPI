@@ -1,6 +1,12 @@
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
+using ChawlaClinic.API;
+using ChawlaClinic.BL.ServiceInterfaces;
+using ChawlaClinic.BL.Services;
 
-app.MapGet("/", () => "Hello World!");
+var builder = WebApplication.CreateBuilder(args);
+
+ServiceExtensions.AddServiceScopes(builder.Services);
+//builder.Services.AddScoped<IUserServiceRepo, UserServiceRepo>();
+
+var app = builder.Build();
 
 app.Run();
