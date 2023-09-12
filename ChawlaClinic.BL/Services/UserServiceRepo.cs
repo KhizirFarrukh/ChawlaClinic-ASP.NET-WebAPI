@@ -51,16 +51,47 @@ namespace ChawlaClinic.BL.Services
                 PasswordHash = PasswordHash,
                 PasswordSalt = PasswordSalt
             });
+
+            _context.SaveChanges();
         }
         
         public GetUserDTO? GetUserById(int id)
         {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
+            
+            if(user == null) { return null; }
 
+            return new GetUserDTO
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                FullName = user.FullName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber
+            };
         }
 
         public List<GetUserDTO> GetUsers()
         {
+            var users = _context.Users.ToList();
 
+            var usersDtos = new List<GetUserDTO>();
+
+            if (users == null) { return usersDtos; }
+
+            foreach(var user in users)
+            {
+                usersDtos.Add(new GetUserDTO
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber
+                });
+            }
+
+            return usersDtos;
         }
 
         private (byte[], byte[]) PasswordHashing(string password)
