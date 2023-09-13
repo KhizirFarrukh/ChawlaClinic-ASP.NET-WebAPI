@@ -4,6 +4,6 @@ namespace ChawlaClinic.BL.ServiceInterfaces
 {
     public interface IAuthServiceRepo
     {
-        bool Login(LoginDTO dto);
+        (bool, int?) Login(LoginDTO dto);
     }
 }

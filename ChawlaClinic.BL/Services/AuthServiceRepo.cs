@@ -13,13 +13,15 @@ namespace ChawlaClinic.BL.Services
             _context = context;
         }
 
-        public bool Login(LoginDTO dto)
+        public (bool, int?) Login(LoginDTO dto)
         {
             var user = _context.Users.FirstOrDefault(u => u.UserName == dto.UserIdentifier || u.Email == dto.UserIdentifier || u.PhoneNumber == dto.UserIdentifier);
 
-            if (user == null) { return false; }
+            if (user == null) { return (false, null); }
 
-            return CommonHelper.ValidatePassword(dto.Password, user.PasswordHash, user.PasswordSalt);
+            bool result = CommonHelper.ValidatePassword(dto.Password, user.PasswordHash, user.PasswordSalt);
+
+            return (result, result ? user.Id : null);
         }
 
     }

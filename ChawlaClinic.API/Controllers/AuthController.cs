@@ -21,15 +21,18 @@ namespace ChawlaClinic.API.Controllers
         {
             try
             {
-                bool status = _authRepo.Login(dto);
-                string message = CustomMessage.LOGIN_SUCCESSFUL;
+                (bool status, int? userId) = _authRepo.Login(dto);
+                string message;
 
-                if (!status)
+                if (status && userId != null)
+                {
+                    message = CustomMessage.LOGIN_SUCCESSFUL;
+                    HttpContext.Session.SetString("UserId", userId.ToString());
+                }
+                else
                 {
                     message = CustomMessage.INCORRECT_CREDENTIALS;
                 }
-
-                // Session maintaining code here
 
                 return Ok(new JSONResponse { Status = status, Message = message });
             }
