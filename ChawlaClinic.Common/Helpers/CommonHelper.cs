@@ -16,6 +16,11 @@ namespace ChawlaClinic.Common.Helpers
             string hashBase64 = Convert.ToBase64String(hash);
             return (hash, salt);
         }
+        public static bool ValidatePassword(string enteredPassword, byte[] storedHash, byte[] storedSalt)
+        {
+            byte[] enteredHash = GenerateHash(enteredPassword, storedSalt);
+            return enteredHash.SequenceEqual(storedHash);
+        }
         private static byte[] GenerateSalt()
         {
             byte[] salt = new byte[SaltSize];
@@ -27,7 +32,7 @@ namespace ChawlaClinic.Common.Helpers
         }
         private static byte[] GenerateHash(string password, byte[] salt)
         {
-            int iterations = 10000; // You can adjust this value for security
+            int iterations = 10000;
             byte[] hash = KeyDerivation.Pbkdf2(password, salt, KeyDerivationPrf.HMACSHA256, iterations, HashSize);
             return hash;
         }

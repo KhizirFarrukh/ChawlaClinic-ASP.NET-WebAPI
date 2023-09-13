@@ -8,11 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
-    <Folder Include="ServiceInterfaces\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ChawlaClinic.Common\ChawlaClinic.Common.csproj" />
     <ProjectReference Include="..\ChawlaClinic.DAL\ChawlaClinic.DAL.csproj" />
   </ItemGroup>
