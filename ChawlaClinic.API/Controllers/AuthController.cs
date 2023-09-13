@@ -26,8 +26,15 @@ namespace ChawlaClinic.API.Controllers
 
                 if (status && userId != null)
                 {
-                    message = CustomMessage.LOGIN_SUCCESSFUL;
-                    HttpContext.Session.SetString("UserId", userId.ToString());
+                    if (HttpContext.Session.GetString("UserId") != null)
+                    {
+                        message = CustomMessage.USER_ALREADY_LOGGED_IN;
+                    }
+                    else
+                    {
+                        message = CustomMessage.LOGIN_SUCCESSFUL;
+                        HttpContext.Session.SetString("UserId", userId.ToString());
+                    }
                 }
                 else
                 {
@@ -35,6 +42,20 @@ namespace ChawlaClinic.API.Controllers
                 }
 
                 return Ok(new JSONResponse { Status = status, Message = message });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+            }
+        }
+
+        [HttpPost("Logout")]
+        public IActionResult Logout()
+        {
+            try
+            {
+                HttpContext.Session.Clear();
+                return Ok(new JSONResponse { Status = true, Message = CustomMessage.LOGOUT_SUCCESSFUL });
             }
             catch (Exception ex)
             {

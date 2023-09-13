@@ -22,6 +22,7 @@
         public const string PASSWORD_INCORRECT = "Password is incorrect";
         public const string PASSWORD_CHANGED = "Password has successfully changed.";
         public const string USER_LOGGED_IN = "User is logged in.";
+        public const string USER_ALREADY_LOGGED_IN = "User is already logged in.";
     }
     public class DeveloperConstants
     {
