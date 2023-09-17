@@ -3,12 +3,15 @@ using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.BL.Services;
 using ChawlaClinic.DAL;
 using Microsoft.EntityFrameworkCore;
-//using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 //using MySql.EntityFrameworkCore.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 ServiceExtensions.AddServiceScopes(builder.Services);
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 //builder.Services.AddSession(options =>
 //{
@@ -23,6 +26,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 //app.UseSession();
 
