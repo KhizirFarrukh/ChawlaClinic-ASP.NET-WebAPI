@@ -33,7 +33,7 @@ namespace ChawlaClinic.API.Controllers
                     else
                     {
                         message = CustomMessage.LOGIN_SUCCESSFUL;
-                        HttpContext.Session.SetString("UserId", userId.ToString());
+                        //HttpContext.Session.SetString("UserId", userId.ToString());
                     }
                 }
                 else
@@ -54,7 +54,7 @@ namespace ChawlaClinic.API.Controllers
         {
             try
             {
-                HttpContext.Session.Clear();
+                //HttpContext.Session.Clear();
                 return Ok(new JSONResponse { Status = true, Message = CustomMessage.LOGOUT_SUCCESSFUL });
             }
             catch (Exception ex)
