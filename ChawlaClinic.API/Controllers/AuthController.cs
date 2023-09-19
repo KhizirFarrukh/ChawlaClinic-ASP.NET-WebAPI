@@ -26,15 +26,17 @@ namespace ChawlaClinic.API.Controllers
 
                 if (status && userId != null)
                 {
-                    if (HttpContext.Session.GetString("UserId") != null)
-                    {
-                        message = CustomMessage.USER_ALREADY_LOGGED_IN;
-                    }
-                    else
-                    {
-                        message = CustomMessage.LOGIN_SUCCESSFUL;
-                        //HttpContext.Session.SetString("UserId", userId.ToString());
-                    }
+                    message = CustomMessage.LOGIN_SUCCESSFUL;
+
+                    //if (HttpContext.Session.GetString("UserId") != null)
+                    //{
+                    //    message = CustomMessage.USER_ALREADY_LOGGED_IN;
+                    //}
+                    //else
+                    //{
+                    //    message = CustomMessage.LOGIN_SUCCESSFUL;
+                    //    //HttpContext.Session.SetString("UserId", userId.ToString());
+                    //}
                 }
                 else
                 {
