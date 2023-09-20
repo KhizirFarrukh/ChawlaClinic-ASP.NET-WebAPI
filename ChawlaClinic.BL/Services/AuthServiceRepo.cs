@@ -23,6 +23,17 @@ namespace ChawlaClinic.BL.Services
 
             return (result, result ? user.Id : null);
         }
+        public void setToken(int userId, string JwtToken)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == userId);
 
+            if(user != null) 
+            {
+                user.JwtToken = JwtToken;
+                _context.SaveChanges();
+            }
+
+            return;
+        }
     }
 }
