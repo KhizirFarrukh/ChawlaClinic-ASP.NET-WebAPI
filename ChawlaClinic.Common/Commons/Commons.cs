@@ -9,8 +9,8 @@
 
         // Auth
         public const string USER_NOT_EXIST = "User not exist.";
-        public const string INCORRECT_CREDENTIALS = "Email or Password is incorrect.";
-        public const string CORRECT_CREDENTIALS = "Email and Password are correct.";
+        public const string INCORRECT_CREDENTIALS = "Username/Email/Phone Number or Password is incorrect.";
+        public const string CORRECT_CREDENTIALS = "Username/Email/Phone Number and Password are correct.";
         public const string EMAIL_NOT_EXIST = "Email not exist.";
         public const string NEW_PASSWORD_SENT = "New password has sent to the registered email address.";
         public const string EMAIL_ALREADY_EXIST = "Email already exists.";
@@ -22,6 +22,7 @@
         public const string PASSWORD_INCORRECT = "Password is incorrect";
         public const string PASSWORD_CHANGED = "Password has successfully changed.";
         public const string USER_LOGGED_IN = "User is logged in.";
+        public const string USER_ALREADY_LOGGED_IN = "User is already logged in.";
     }
     public class DeveloperConstants
     {

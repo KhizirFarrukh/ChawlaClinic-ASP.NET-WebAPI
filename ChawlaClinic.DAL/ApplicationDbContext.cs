@@ -1,5 +1,6 @@
 ﻿using ChawlaClinic.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using MySql.EntityFrameworkCore.Extensions;
 
 namespace ChawlaClinic.DAL
 {

@@ -8,6 +8,7 @@ namespace ChawlaClinic.API
         public static void AddServiceScopes(IServiceCollection services)
         {
             services.AddScoped<IUserServiceRepo, UserServiceRepo>();
+            services.AddScoped<IAuthServiceRepo, AuthServiceRepo>();
         }
     }
 }

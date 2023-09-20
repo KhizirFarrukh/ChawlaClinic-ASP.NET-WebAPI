@@ -8,5 +8,6 @@
         public string? PhoneNumber { get; set; } = null;
         public byte[] PasswordHash { get; set; }
         public byte[] PasswordSalt { get; set; }
+        public string? JwtToken { get; set; } = null;
     }
 }
