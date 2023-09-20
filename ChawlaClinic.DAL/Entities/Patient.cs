@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ChawlaClinic.DAL.Entities
 {
@@ -8,7 +9,8 @@ namespace ChawlaClinic.DAL.Entities
         public new Guid Id { get; set; } = new Guid();
         public string Name { get; set; } = string.Empty;
         public string GuardianName { get; set; } = string.Empty;
-        public int Age { get; set; }
+        public int AgeYears { get; set; }
+        public int AgeMonths { get; set; }
         public char Gender { get; set; } = char.MinValue;
         public string Address { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
@@ -17,6 +19,10 @@ namespace ChawlaClinic.DAL.Entities
         public char Type { get; set; } = char.MinValue;
         public string Disease { get; set; } = string.Empty;
         public DateOnly FirstVisit { get; set; }
-        public string DiscountMode { get; set; } = string.Empty;
+
+        [ForeignKey("PatientDiscount")]
+        public int? DiscountId { get; set; }
+
+        public PatientDiscount? PatientDiscount { get; set; }
     }
 }

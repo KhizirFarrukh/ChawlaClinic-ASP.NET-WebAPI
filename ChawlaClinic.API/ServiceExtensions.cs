@@ -9,6 +9,7 @@ namespace ChawlaClinic.API
         {
             services.AddScoped<IUserServiceRepo, UserServiceRepo>();
             services.AddScoped<IAuthServiceRepo, AuthServiceRepo>();
+            services.AddScoped<IPatientServiceRepo, PatientServiceRepo>();
         }
     }
 }

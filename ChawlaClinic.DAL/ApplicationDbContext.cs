@@ -8,6 +8,16 @@ namespace ChawlaClinic.DAL
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Patient>()
+                .HasOne(d => d.PatientDiscount)
+                .WithMany(p => p.Patients)
+                .HasForeignKey(d => d.DiscountId);
+        }
+
         public DbSet<User> Users => Set<User>();
+        public DbSet<Patient> Patients => Set<Patient>();
+        public DbSet<PatientDiscount> PatientDiscounts => Set<PatientDiscount>();
     }
 }
