@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34009.444
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChawlaClinic.API", "ChawlaClinic-API\ChawlaClinic.API.csproj", "{CBA3FE71-03B7-404D-8994-9A70F4748BB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChawlaClinic.API", "ChawlaClinic.API\ChawlaClinic.API.csproj", "{CBA3FE71-03B7-404D-8994-9A70F4748BB9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChawlaClinic.DAL", "ChawlaClinic-DAL\ChawlaClinic.DAL.csproj", "{5ECE6843-7868-4F27-8821-31B5089EA939}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChawlaClinic.DAL", "ChawlaClinic.DAL\ChawlaClinic.DAL.csproj", "{5ECE6843-7868-4F27-8821-31B5089EA939}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChawlaClinic.BL", "ChawlaClinic-BL\ChawlaClinic.BL.csproj", "{72D555A6-B9FD-4311-B0A7-386581DA4B69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChawlaClinic.BL", "ChawlaClinic.BL\ChawlaClinic.BL.csproj", "{72D555A6-B9FD-4311-B0A7-386581DA4B69}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChawlaClinic.Common", "ChawlaClinic-Common\ChawlaClinic.Common.csproj", "{5136B777-C2A4-4210-9861-8E595AE89C3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChawlaClinic.Common", "ChawlaClinic.Common\ChawlaClinic.Common.csproj", "{5136B777-C2A4-4210-9861-8E595AE89C3F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
