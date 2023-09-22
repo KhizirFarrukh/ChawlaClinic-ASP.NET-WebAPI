@@ -18,6 +18,7 @@ namespace ChawlaClinic.BL.DTOs.Patient
         public string CaseNo { get; set; } = string.Empty;
         public bool Status { get; set; }
         public DateOnly FirstVisit { get; set; }
-        public int DiscountId { get; set; }
+        public int? DiscountId { get; set; }
+        public string Discount { get; set; } = string.Empty;
     }
 }
