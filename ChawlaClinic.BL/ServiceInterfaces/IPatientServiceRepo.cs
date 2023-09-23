@@ -9,7 +9,8 @@ namespace ChawlaClinic.BL.ServiceInterfaces
         List<GetPatientForSearchDTO>? SearchPatient(string searchParam);
         void AddPatient(AddPatientDTO dto);
         void AddPatient(AddEmergencyBurnPatientDTO dto);
-        (bool, string) UpdatePatient(AddPatientDTO dto);
-        bool DeletePatient(int Id);
+        void AddPatient(List<AddPatientDTO> bulkPatientDTOs);
+        (bool, string) UpdatePatient(UpdatePatientDTO dto);
+        bool DeletePatient(string Id);
     }
 }

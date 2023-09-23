@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using System.Data.Entity;
 using System.Reflection;
 using System.Transactions;
+using System.Xml.Linq;
 
 namespace ChawlaClinic.BL.Services
 {
@@ -146,15 +147,124 @@ namespace ChawlaClinic.BL.Services
         }
         public void AddPatient(AddEmergencyBurnPatientDTO dto)
         {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    string UserId = "";
+                    var addUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
 
+                    if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
+
+                    char type = 'B';
+                    string caseNo = generateCaseNo(type);
+
+                    _context.Patients.Add(new Patient
+                    {
+                        Name = dto.Name,
+                        GuardianName = dto.GuardianName,
+                        AgeYears = dto.AgeYears,
+                        AgeMonths = dto.AgeMonths,
+                        Gender = dto.Gender,
+                        Type = type,
+                        Disease = "",
+                        Address = "",
+                        PhoneNumber = "",
+                        CaseNo = caseNo,
+                        FirstVisit = DateOnly.FromDateTime(DateTime.Now),
+                        IsActive = true,
+                        IsDeleted = false,
+                        AddedOn = DateTime.Now,
+                        ModifiedOn = null,
+                        AddedBy = addUserId ?? -1,
+                        ModifiedBy = null
+                    });
+
+                    _context.SaveChanges();
+
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+
+                    throw ex;
+                }
+            }
         }
-        public (bool, string) UpdatePatient(AddPatientDTO dto)
+        public void AddPatient(List<AddPatientDTO> bulkPatientDTOs)
         {
 
         }
-        public bool DeletePatient(int Id)
+        public (bool, string) UpdatePatient(UpdatePatientDTO dto)
         {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    string UserId = "";
+                    var updateUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
 
+                    if (updateUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
+
+                    var patient = _context.Patients.Where(p => p.Id.ToString() == dto.Id).FirstOrDefault();
+
+                    if(patient == null) { return (false,  string.Format(CustomMessage.NOT_FOUND, "Patient")); }
+
+                    if (dto.CaseNo == "") { dto.CaseNo = generateCaseNo(dto.Type); }
+
+                    patient.Name = dto.Name;
+                    patient.GuardianName = dto.GuardianName;
+                    patient.AgeYears = dto.AgeYears;
+                    patient.AgeMonths = dto.AgeMonths;
+                    patient.Gender = dto.Gender;
+                    patient.Disease = dto.Disease;
+                    patient.Address = dto.Address;
+                    patient.PhoneNumber = dto.PhoneNumber;
+                    patient.FirstVisit = dto.FirstVisit;
+                    patient.ModifiedOn = DateTime.Now;
+                    patient.ModifiedBy = updateUserId ?? -1;
+
+                    _context.SaveChanges();
+
+                    transaction.Commit();
+
+                    return (true, string.Format(CustomMessage.UPDATED_SUCCESSFULLY, "Patient"));
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+
+                    throw ex;
+                }
+            }
+        }
+        public bool DeletePatient(string Id)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    var patient = _context.Patients.Where(p => p.Id.ToString() == Id).FirstOrDefault();
+
+                    if (patient == null) { return false; }
+
+                    patient.IsActive = false;
+                    patient.IsDeleted = true;
+
+                    _context.SaveChanges();
+
+                    transaction.Commit();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+
+                    throw ex;
+                }
+            }
         }
 
         private string generateCaseNo(char type)
