@@ -99,6 +99,36 @@ namespace ChawlaClinic.BL.Services
 
             return patients;
         }
+        public List<GetPatientForSearchDTO>? SearchPatient(SearchPatientFiltersDTO filters)
+        {
+            filters.SearchParam = filters.SearchParam.ToUpper();
+
+            var patient_dicounts = _context.PatientDiscounts.ToList();
+            
+            var patients = _context.Patients
+                .Where(p =>
+                    (p.Name.ToUpper().Contains(filters.SearchParam) ||
+                     p.PhoneNumber.ToUpper().Contains(filters.SearchParam) ||
+                     p.CaseNo.ToUpper().Contains(filters.SearchParam)) &&
+                    (p.Type == filters.Type) &&
+                    (filters.FirstVisitStart == null || p.FirstVisit >= filters.FirstVisitStart) &&
+                    (filters.FirstVisitEnd == null || p.FirstVisit <= filters.FirstVisitEnd) &&
+                    (filters.ActiveStatus == FilterActiveStatus.All || p.IsActive == (filters.ActiveStatus == FilterActiveStatus.Active)) &&
+                    (filters.DeleteStatus == FilterDeleteStatus.All || p.IsDeleted == (filters.DeleteStatus == FilterDeleteStatus.Deleted)))
+                .Select(p => new GetPatientForSearchDTO
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    CaseNo = p.CaseNo,
+                    Status = p.IsActive,
+                    FirstVisit = p.FirstVisit
+                })
+                .Skip(filters.PageNumber * filters.PageSize)
+                .Take(filters.PageSize)
+                .ToList();
+
+            return patients;
+        }
         public void AddPatient(AddPatientDTO dto)
         {
             using (var transaction = _context.Database.BeginTransaction())
