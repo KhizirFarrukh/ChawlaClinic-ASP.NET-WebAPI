@@ -4,6 +4,7 @@ using ChawlaClinic.Common.Commons;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
 using Microsoft.EntityFrameworkCore.Storage;
+using OfficeOpenXml;
 using System.Data.Entity;
 using System.Reflection;
 using System.Transactions;
@@ -140,7 +141,7 @@ namespace ChawlaClinic.BL.Services
 
                     if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
 
-                    if (dto.CaseNo == "") { dto.CaseNo = generateCaseNo(dto.Type); }
+                    if (dto.CaseNo == "") { dto.CaseNo = GenerateCaseNo(dto.Type); }
 
                     _context.Patients.Add(new Patient
                     {
@@ -187,7 +188,7 @@ namespace ChawlaClinic.BL.Services
                     if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
 
                     char type = 'B';
-                    string caseNo = generateCaseNo(type);
+                    string caseNo = GenerateCaseNo(type);
 
                     _context.Patients.Add(new Patient
                     {
@@ -222,9 +223,9 @@ namespace ChawlaClinic.BL.Services
                 }
             }
         }
-        public void AddPatient(List<AddPatientDTO> bulkPatientDTOs)
+        public void AddPatient(IFormFile excelFile)
         {
-
+            var patientDtos = ParseExcelFile(excelFile);
         }
         public (bool, string) UpdatePatient(UpdatePatientDTO dto)
         {
@@ -239,9 +240,9 @@ namespace ChawlaClinic.BL.Services
 
                     var patient = _context.Patients.Where(p => p.Id.ToString() == dto.Id).FirstOrDefault();
 
-                    if(patient == null) { return (false,  string.Format(CustomMessage.NOT_FOUND, "Patient")); }
+                    if(patient == null) { return (false, string.Format(CustomMessage.NOT_FOUND, "Patient")); }
 
-                    if (dto.CaseNo == "") { dto.CaseNo = generateCaseNo(dto.Type); }
+                    if (dto.CaseNo == "") { dto.CaseNo = GenerateCaseNo(dto.Type); }
 
                     patient.Name = dto.Name;
                     patient.GuardianName = dto.GuardianName;
@@ -297,9 +298,45 @@ namespace ChawlaClinic.BL.Services
             }
         }
 
-        private string generateCaseNo(char type)
+        private string GenerateCaseNo(char type)
         {
             return "";
+        }
+        private List<AddPatientDTO>? ParseExcelFile(IFormFile excelFile)
+        {
+            var patients = new List<AddPatientDTO>();
+
+            using (var stream = excelFile.OpenReadStream())
+            {
+                using (var package = new ExcelPackage(stream))
+                {
+                    var worksheet = package.Workbook.Worksheets[0];
+
+                    int startRow = 2;
+
+                    for (int row = startRow; row <= worksheet.Dimension.End.Row; row++)
+                    {
+                        var patient = new AddPatientDTO
+                        {
+                            Name = worksheet.Cells[row, 1].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
+                            GuardianName = worksheet.Cells[row, 2].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
+                            AgeYears = Convert.ToInt32(worksheet.Cells[row, 3].Value),
+                            AgeMonths = Convert.ToInt32(worksheet.Cells[row, 4].Value),
+                            Gender = worksheet.Cells[row, 5].Value?.ToString()[0] ?? throw new Exception("Error parsing Excel file"),
+                            Type = worksheet.Cells[row, 6].Value?.ToString()[0] ?? throw new Exception("Error parsing Excel file"),
+                            Disease = worksheet.Cells[row, 7].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
+                            Address = worksheet.Cells[row, 8].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
+                            PhoneNumber = worksheet.Cells[row, 9].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
+                            CaseNo = worksheet.Cells[row, 10].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
+                            FirstVisit = DateOnly.Parse(worksheet.Cells[row, 11].Value?.ToString() ?? throw new Exception("Error parsing Excel file"))
+                        };
+
+                        patients.Add(patient);
+                    }
+                }
+            }
+
+            return patients;
         }
     }
 }
