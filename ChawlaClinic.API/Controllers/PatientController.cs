@@ -80,5 +80,55 @@ namespace ChawlaClinic.API.Controllers
                 return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
             }
         }
+
+        [HttpPost("AddPatient")]
+        public IActionResult AddPatient(AddPatientDTO dto)
+        {
+            try
+            {
+                _patientRepo.AddPatient(dto);
+
+                return Ok(new JSONResponse { Status = true, Message = string.Format(CustomMessage.ADDED_SUCCESSFULLY, "Patient") });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+            }
+        }
+
+        [HttpPost("AddEmergencyBurnPatient")]
+        public IActionResult AddEmergencyBurnPatient(AddEmergencyBurnPatientDTO dto)
+        {
+            try
+            {
+                _patientRepo.AddPatient(dto);
+
+                return Ok(new JSONResponse { Status = true, Message = string.Format(CustomMessage.ADDED_SUCCESSFULLY, "Emergency Burn Patient") });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+            }
+        }
+
+        [HttpPost("AddBulkPatients")]
+        public IActionResult AddBulkPatients([FromForm(Name = "excelFile")] IFormFile excelFile)
+        {
+            try
+            {
+                if (excelFile == null)
+                {
+                    return Ok(new JSONResponse { Status = false, Message = string.Format(CustomMessage.NOT_FOUND, "Excel file") });
+                }
+
+                _patientRepo.AddPatient(excelFile);
+
+                return Ok(new JSONResponse { Status = true, Message = string.Format(CustomMessage.ADDED_SUCCESSFULLY, "Emergency Burn Patient") });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+            }
+        }
     }
 }
