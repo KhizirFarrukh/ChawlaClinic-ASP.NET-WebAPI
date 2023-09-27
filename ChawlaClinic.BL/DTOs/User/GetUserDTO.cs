@@ -9,7 +9,7 @@
         public string? PhoneNumber { get; set; }
         public bool IsActive { get; set; }
         public bool IsDeleted { get; set; }
-        public DateTime AddedOn { get; set; }
-        public DateTime ModifiedOn { get; set; }
+        public DateTime? AddedOn { get; set; }
+        public DateTime? ModifiedOn { get; set; }
     }
 }

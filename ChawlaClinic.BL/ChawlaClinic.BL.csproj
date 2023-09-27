@@ -9,6 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
+    <PackageReference Include="EPPlus" Version="6.2.9" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ChawlaClinic.Common\ChawlaClinic.Common.csproj" />
     <ProjectReference Include="..\ChawlaClinic.DAL\ChawlaClinic.DAL.csproj" />
   </ItemGroup>
