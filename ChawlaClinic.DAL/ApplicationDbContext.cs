@@ -14,10 +14,16 @@ namespace ChawlaClinic.DAL
                 .HasOne(d => d.PatientDiscount)
                 .WithMany(p => p.Patients)
                 .HasForeignKey(d => d.DiscountId);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Patient)
+                .WithMany(p => p.Payments)
+                .HasForeignKey(p => p.PatientId);
         }
 
         public DbSet<User> Users => Set<User>();
         public DbSet<Patient> Patients => Set<Patient>();
         public DbSet<PatientDiscount> PatientDiscounts => Set<PatientDiscount>();
+        public DbSet<Payment> Payments => Set<Payment>();
     }
 }

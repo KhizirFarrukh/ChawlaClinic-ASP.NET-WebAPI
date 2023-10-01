@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ChawlaClinic.DAL.Entities
 {
-    public class Patient : Base
+    public class Patient : Base_ID_GUID
     {
-        [Key]
-        public new Guid Id { get; set; } = new Guid();
         public string Name { get; set; } = string.Empty;
         public string GuardianName { get; set; } = string.Empty;
         public int AgeYears { get; set; }
@@ -19,6 +17,8 @@ namespace ChawlaClinic.DAL.Entities
         public char Type { get; set; } = char.MinValue;
         public string Disease { get; set; } = string.Empty;
         public DateOnly FirstVisit { get; set; }
+
+        public ICollection<Payment>? Payments { get; set; }
 
         [ForeignKey("PatientDiscount")]
         public int? DiscountId { get; set; }
