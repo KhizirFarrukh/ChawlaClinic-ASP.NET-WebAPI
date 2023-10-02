@@ -1,0 +1,60 @@
+﻿using ChawlaClinic.BL.DTOs.Payment;
+using ChawlaClinic.BL.ServiceInterfaces;
+using ChawlaClinic.Common.Commons;
+using ChawlaClinic.DAL;
+using ChawlaClinic.DAL.Entities;
+
+namespace ChawlaClinic.BL.Services
+{
+    public class PaymentServiceRepo : IPaymentServiceRepo
+    {
+        private ApplicationDbContext _context;
+        public PaymentServiceRepo(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        public bool AddPayment(AddPaymentDTO dto)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    string UserId = "";
+                    var addUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
+
+                    if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
+
+                    var patient = _context.Patients.Where(p => p.Id.ToString() == dto.PatientId).FirstOrDefault();
+
+                    if (patient == null) { return false; }
+
+                    _context.Payments.Add(new Payment
+                    {
+                        PatientId = Guid.Parse(dto.PatientId),
+                        AmountPaid = dto.AmountPaid,
+                        PaymentDate = dto.PaymentDate,
+                        IsActive = true,
+                        IsDeleted = false,
+                        AddedOn = DateTime.UtcNow,
+                        AddedBy = addUserId ?? -1,
+                        ModifiedOn = null,
+                        ModifiedBy = null
+                    });
+
+                    _context.SaveChanges();
+
+                    transaction.Commit();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+
+                    throw ex;
+                }
+            }
+        }
+    }
+}

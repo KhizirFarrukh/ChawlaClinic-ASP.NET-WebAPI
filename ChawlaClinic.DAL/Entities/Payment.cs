@@ -9,6 +9,6 @@ namespace ChawlaClinic.DAL.Entities
 
         [ForeignKey("Patient")]
         public Guid PatientId { get; set; }
-        public Patient? Patient { get; set; }
+        public virtual Patient? Patient { get; set; }
     }
 }
