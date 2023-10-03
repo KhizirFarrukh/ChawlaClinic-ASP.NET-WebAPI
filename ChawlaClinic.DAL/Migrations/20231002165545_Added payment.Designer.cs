@@ -3,6 +3,7 @@ using System;
 using ChawlaClinic.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChawlaClinic.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231002165545_Added payment")]
+    partial class Addedpayment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -167,14 +170,6 @@ namespace ChawlaClinic.DAL.Migrations
 
                     b.Property<DateOnly>("PaymentDate")
                         .HasColumnType("date");
-
-                    b.Property<string>("SecureToken")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("TokenID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

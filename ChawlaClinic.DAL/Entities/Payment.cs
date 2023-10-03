@@ -7,6 +7,10 @@ namespace ChawlaClinic.DAL.Entities
         public int AmountPaid { get; set; }
         public DateOnly PaymentDate { get; set; }
 
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int TokenID { get; set; }
+        public string SecureToken { get; set; } = string.Empty;
+
         [ForeignKey("Patient")]
         public Guid PatientId { get; set; }
         public virtual Patient? Patient { get; set; }

@@ -1,6 +1,7 @@
 ﻿using ChawlaClinic.BL.DTOs.Payment;
 using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
+using ChawlaClinic.Common.Helpers;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
 
@@ -29,7 +30,7 @@ namespace ChawlaClinic.BL.Services
 
                     if (patient == null) { return false; }
 
-                    _context.Payments.Add(new Payment
+                    var payment = new Payment
                     {
                         PatientId = Guid.Parse(dto.PatientId),
                         AmountPaid = dto.AmountPaid,
@@ -40,7 +41,11 @@ namespace ChawlaClinic.BL.Services
                         AddedBy = addUserId ?? -1,
                         ModifiedOn = null,
                         ModifiedBy = null
-                    });
+                    };
+
+                    payment.SecureToken = CommonHelper.GenerateSecureToken(payment.TokenID);
+
+                    _context.Payments.Add(payment);
 
                     _context.SaveChanges();
 
