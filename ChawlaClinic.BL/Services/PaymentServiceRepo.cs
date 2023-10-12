@@ -61,5 +61,35 @@ namespace ChawlaClinic.BL.Services
                 }
             }
         }
+
+        public List<GetPaymentDTO>? GetPayments(string patientId)
+        {
+            var patient = _context.Patients
+                .Where(p => p.Id.ToString() == patientId &&
+                            p.IsDeleted == false)
+                .FirstOrDefault();
+
+            if (patient == null) { return null; }
+
+            var payments = _context.Payments
+                .Where(p => p.PatientId == patient.Id &&
+                            p.IsDeleted == false)
+                .ToList();
+
+            var paymentDtos = new List<GetPaymentDTO>();
+
+            foreach(var payment in payments)
+            {
+                paymentDtos.Add(new GetPaymentDTO
+                {
+                    PaymentId = payment.Id.ToString(),
+                    PatientId = payment.PatientId.ToString(),
+                    AmountPaid = payment.AmountPaid,
+                    PaymentDate = payment.PaymentDate,
+                });
+            }
+
+            return paymentDtos;
+        }
     }
 }
