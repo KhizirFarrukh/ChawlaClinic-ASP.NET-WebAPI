@@ -6,5 +6,6 @@ namespace ChawlaClinic.BL.ServiceInterfaces
     {
         bool AddPayment(AddPaymentDTO dto);
         List<GetPaymentDTO>? GetPayments(string patientId);
+        GetPaymentDTO? GetPaymentById(string paymentId);
     }
 }

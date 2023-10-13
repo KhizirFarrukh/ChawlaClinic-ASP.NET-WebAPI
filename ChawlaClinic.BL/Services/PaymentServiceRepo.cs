@@ -91,5 +91,22 @@ namespace ChawlaClinic.BL.Services
 
             return paymentDtos;
         }
+
+        public GetPaymentDTO? GetPaymentById(string paymentId)
+        {
+            var payment = _context.Payments
+                .Where(p => p.Id.ToString() == paymentId &&
+                            p.IsDeleted == false)
+                .Select(p => new GetPaymentDTO
+                {
+                    PaymentId = p.Id.ToString(),
+                    PatientId = p.PatientId.ToString(),
+                    AmountPaid = p.AmountPaid,
+                    PaymentDate = p.PaymentDate,
+                })
+                .FirstOrDefault();
+            
+            return payment;
+        }
     }
 }

@@ -38,6 +38,30 @@ namespace ChawlaClinic.API.Controllers
             }
         }
 
+        [HttpGet("GetPaymentById")]
+        public IActionResult GetPaymentById(string paymentId)
+        {
+            try
+            {
+                var payment = _paymentRepo.GetPaymentById(paymentId);
+
+                bool result = false;
+                string msg = string.Format(CustomMessage.NOT_FOUND, "Payment");
+
+                if (payment != null)
+                {
+                    result = true;
+                    msg = "";
+                }
+
+                return Ok(new JSONResponse { Status = result, Message = msg, Data = payment });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+            }
+        }
+
         [HttpPost("AddPayment")]
         public IActionResult AddPayment(AddPaymentDTO dto)
         {
