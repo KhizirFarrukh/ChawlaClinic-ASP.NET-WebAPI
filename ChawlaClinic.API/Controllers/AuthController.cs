@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ChawlaClinic.API.Controllers
 {
@@ -52,7 +53,7 @@ namespace ChawlaClinic.API.Controllers
                         var claims = new[]
                         {
                             new Claim(JwtRegisteredClaimNames.Jti, user.Id.ToString()),
-                            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
                             new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
                             new Claim(JwtRegisteredClaimNames.Name, user.FullName),
                         };
@@ -61,7 +62,7 @@ namespace ChawlaClinic.API.Controllers
                             _configuration["Jwt:Issuer"],
                             _configuration["Jwt:Audience"],
                             claims,
-                            expires: DateTime.UtcNow.AddHours(1), // Token expiration time
+                            expires: DateTime.UtcNow.AddHours(Convert.ToDouble(_configuration["Jwt:TokenExpirationTimeHours"] ?? "1")),
                             signingCredentials: credentials
                         );
 
@@ -83,12 +84,15 @@ namespace ChawlaClinic.API.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("Logout")]
         public IActionResult Logout()
         {
             try
             {
-                //HttpContext.Session.Clear();
+                var userId = Convert.ToInt32(HttpContext.User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value ?? "-1");
+                _authRepo.clearToken(userId);
+
                 return Ok(new JSONResponse { Status = true, Message = CustomMessage.LOGOUT_SUCCESSFUL });
             }
             catch (Exception ex)

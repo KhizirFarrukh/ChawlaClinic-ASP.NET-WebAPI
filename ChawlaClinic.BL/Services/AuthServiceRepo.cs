@@ -35,5 +35,17 @@ namespace ChawlaClinic.BL.Services
 
             return;
         }
+        public void clearToken(int userId)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == userId);
+
+            if (user != null)
+            {
+                user.JwtToken = null;
+                _context.SaveChanges();
+            }
+
+            return;
+        }
     }
 }

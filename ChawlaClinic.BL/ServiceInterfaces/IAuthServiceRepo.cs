@@ -6,5 +6,6 @@ namespace ChawlaClinic.BL.ServiceInterfaces
     {
         (bool, int?) Login(LoginDTO dto);
         void setToken(int userId, string JwtToken);
+        void clearToken(int userId);
     }
 }

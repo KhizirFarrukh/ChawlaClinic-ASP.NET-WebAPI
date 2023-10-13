@@ -3,6 +3,7 @@ using System;
 using ChawlaClinic.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ChawlaClinic.DAL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230927161115_added patient")]
+    partial class addedpatient
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,54 +138,6 @@ namespace ChawlaClinic.DAL.Migrations
                     b.ToTable("PatientDiscounts");
                 });
 
-            modelBuilder.Entity("ChawlaClinic.DAL.Entities.Payment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
-
-                    b.Property<int>("AddedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("AddedOn")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<int>("AmountPaid")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int?>("ModifiedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("ModifiedOn")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<Guid>("PatientId")
-                        .HasColumnType("char(36)");
-
-                    b.Property<DateOnly>("PaymentDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("SecureToken")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("TokenID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PatientId");
-
-                    b.ToTable("Payments");
-                });
-
             modelBuilder.Entity("ChawlaClinic.DAL.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -244,22 +199,6 @@ namespace ChawlaClinic.DAL.Migrations
                         .HasForeignKey("DiscountId");
 
                     b.Navigation("PatientDiscount");
-                });
-
-            modelBuilder.Entity("ChawlaClinic.DAL.Entities.Payment", b =>
-                {
-                    b.HasOne("ChawlaClinic.DAL.Entities.Patient", "Patient")
-                        .WithMany("Payments")
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("ChawlaClinic.DAL.Entities.Patient", b =>
-                {
-                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("ChawlaClinic.DAL.Entities.PatientDiscount", b =>
