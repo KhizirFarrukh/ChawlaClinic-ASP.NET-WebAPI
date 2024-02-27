@@ -1,37 +1,131 @@
-﻿using ChawlaClinic.DAL.Entities;
+﻿using System;
+using System.Collections.Generic;
+using ChawlaClinic.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
-using MySql.EntityFrameworkCore.Extensions;
 
-namespace ChawlaClinic.DAL
+namespace ChawlaClinic.DAL;
+
+public partial class ApplicationDbContext : DbContext
 {
-    public class ApplicationDbContext : DbContext
+    public ApplicationDbContext()
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Patient>()
-                .HasOne(d => d.PatientDiscount)
-                .WithMany(p => p.Patients)
-                .HasForeignKey(d => d.DiscountId);
-
-            modelBuilder.Entity<Payment>()
-                .HasOne(p => p.Patient)
-                .WithMany(p => p.Payments)
-                .HasForeignKey(p => p.PatientId);
-
-            modelBuilder.Entity<Payment>()
-                .HasIndex(p => p.TokenID)
-                .IsUnique();
-
-            modelBuilder.Entity<Payment>()
-                .HasIndex(p => p.SecureToken)
-                .IsUnique();
-        }
-
-        public DbSet<User> Users => Set<User>();
-        public DbSet<Patient> Patients => Set<Patient>();
-        public DbSet<PatientDiscount> PatientDiscounts => Set<PatientDiscount>();
-        public DbSet<Payment> Payments => Set<Payment>();
     }
+
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
+    {
+    }
+
+    public virtual DbSet<DiscountOption> DiscountOptions { get; set; }
+
+    public virtual DbSet<Patient> Patients { get; set; }
+
+    public virtual DbSet<Payment> Payments { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseMySQL("Server=localhost;Database=chawlaclinic;User ID=root;Password=root;");
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<DiscountOption>(entity =>
+        {
+            entity.HasKey(e => e.DiscountId).HasName("PRIMARY");
+
+            entity.ToTable("discount_option");
+
+            entity.Property(e => e.DiscountId).HasColumnName("discount_id");
+            entity.Property(e => e.Title)
+                .HasMaxLength(16)
+                .HasColumnName("title");
+        });
+
+        modelBuilder.Entity<Patient>(entity =>
+        {
+            entity.HasKey(e => e.PatientId).HasName("PRIMARY");
+
+            entity.ToTable("patient");
+
+            entity.HasIndex(e => e.DiscountId, "fk_patient_discount");
+
+            entity.Property(e => e.PatientId).HasColumnName("patient_id");
+            entity.Property(e => e.Address)
+                .HasMaxLength(128)
+                .HasColumnName("address");
+            entity.Property(e => e.AgeMonths).HasColumnName("age_months");
+            entity.Property(e => e.AgeYears).HasColumnName("age_years");
+            entity.Property(e => e.CaseNo)
+                .HasMaxLength(10)
+                .HasColumnName("case_no");
+            entity.Property(e => e.Description)
+                .HasMaxLength(1024)
+                .HasColumnName("description");
+            entity.Property(e => e.DiscountId).HasColumnName("discount_id");
+            entity.Property(e => e.Disease)
+                .HasMaxLength(512)
+                .HasColumnName("disease");
+            entity.Property(e => e.FirstVisit)
+                .HasColumnType("date")
+                .HasColumnName("first_visit");
+            entity.Property(e => e.Gender)
+                .HasMaxLength(1)
+                .HasColumnName("gender");
+            entity.Property(e => e.GuardianName)
+                .HasMaxLength(256)
+                .HasColumnName("guardian_name");
+            entity.Property(e => e.Name)
+                .HasMaxLength(256)
+                .HasColumnName("name");
+            entity.Property(e => e.PhoneNumber)
+                .HasMaxLength(11)
+                .HasColumnName("phone_number");
+            entity.Property(e => e.Status)
+                .HasMaxLength(6)
+                .HasDefaultValueSql("'ACTIVE'")
+                .HasColumnName("status");
+            entity.Property(e => e.Type)
+                .HasMaxLength(1)
+                .HasDefaultValueSql("'B'")
+                .IsFixedLength()
+                .HasColumnName("type");
+
+            entity.HasOne(d => d.Discount).WithMany(p => p.Patients)
+                .HasForeignKey(d => d.DiscountId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_patient_discount");
+        });
+
+        modelBuilder.Entity<Payment>(entity =>
+        {
+            entity.HasKey(e => e.PaymentId).HasName("PRIMARY");
+
+            entity.ToTable("payment");
+
+            entity.HasIndex(e => e.DiscountId, "fk_payment_discount");
+
+            entity.HasIndex(e => e.PatientId, "fk_payment_patient");
+
+            entity.Property(e => e.PaymentId).HasColumnName("payment_id");
+            entity.Property(e => e.Amount).HasColumnName("amount");
+            entity.Property(e => e.DateTime)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("datetime")
+                .HasColumnName("date_time");
+            entity.Property(e => e.DiscountId).HasColumnName("discount_id");
+            entity.Property(e => e.PatientId).HasColumnName("patient_id");
+
+            entity.HasOne(d => d.Discount).WithMany(p => p.Payments)
+                .HasForeignKey(d => d.DiscountId)
+                .HasConstraintName("fk_payment_discount");
+
+            entity.HasOne(d => d.Patient).WithMany(p => p.Payments)
+                .HasForeignKey(d => d.PatientId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_payment_patient");
+        });
+
+        OnModelCreatingPartial(modelBuilder);
+    }
+
+    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
