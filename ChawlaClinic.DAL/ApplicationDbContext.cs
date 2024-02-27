@@ -106,7 +106,7 @@ public partial class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.PatientId, "fk_payment_patient");
 
             entity.Property(e => e.PaymentId).HasColumnName("payment_id");
-            entity.Property(e => e.Amount).HasColumnName("amount");
+            entity.Property(e => e.AmountPaid).HasColumnName("amount_paid");
             entity.Property(e => e.DateTime)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime")

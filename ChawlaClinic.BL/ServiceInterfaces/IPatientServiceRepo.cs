@@ -1,4 +1,4 @@
-﻿using ChawlaClinic.BL.DTOs.Patient;
+﻿using ChawlaClinic.BL.Requests.Patient;
 
 namespace ChawlaClinic.BL.ServiceInterfaces
 {

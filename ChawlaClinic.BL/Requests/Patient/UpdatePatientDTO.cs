@@ -1,8 +1,10 @@
-﻿namespace ChawlaClinic.BL.DTOs.Patient
+﻿namespace ChawlaClinic.BL.Requests.Patient
 {
-    public class AddPatientDTO
+    public class UpdatePatientDTO
     {
+        public string Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public string GuardianName { get; set; } = string.Empty;
         public int AgeYears { get; set; }
         public int AgeMonths { get; set; }
@@ -12,6 +14,8 @@
         public string Address { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string CaseNo { get; set; } = string.Empty;
+        public bool Status { get; set; }
         public DateOnly FirstVisit { get; set; }
+        public int DiscountId { get; set; }
     }
 }

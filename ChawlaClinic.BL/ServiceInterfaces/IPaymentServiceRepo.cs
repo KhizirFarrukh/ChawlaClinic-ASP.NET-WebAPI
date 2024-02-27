@@ -1,11 +1,11 @@
-﻿using ChawlaClinic.BL.DTOs.Payment;
+﻿using ChawlaClinic.BL.Requests.Payment;
 
 namespace ChawlaClinic.BL.ServiceInterfaces
 {
     public interface IPaymentServiceRepo
     {
-        bool AddPayment(AddPaymentDTO dto);
-        List<GetPaymentDTO>? GetPayments(string patientId);
-        GetPaymentDTO? GetPaymentById(string paymentId);
+        bool AddPayment(CreatePaymentRequest dto);
+        List<GetPaymentByPaymentIdRequest>? GetPayments(string patientId);
+        GetPaymentByPaymentIdRequest? GetPaymentById(string paymentId);
     }
 }

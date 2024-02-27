@@ -1,4 +1,4 @@
-﻿using ChawlaClinic.BL.DTOs.Payment;
+﻿using ChawlaClinic.BL.Requests.Payment;
 using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
 using ChawlaClinic.Common.Helpers;
@@ -15,7 +15,7 @@ namespace ChawlaClinic.BL.Services
             _context = context;
         }
 
-        public bool AddPayment(AddPaymentDTO dto)
+        public bool AddPayment(CreatePaymentRequest dto)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -62,7 +62,7 @@ namespace ChawlaClinic.BL.Services
             }
         }
 
-        public List<GetPaymentDTO>? GetPayments(string patientId)
+        public List<GetPaymentByPaymentIdRequest>? GetPayments(string patientId)
         {
             var patient = _context.Patients
                 .Where(p => p.Id.ToString() == patientId &&
@@ -76,11 +76,11 @@ namespace ChawlaClinic.BL.Services
                             p.IsDeleted == false)
                 .ToList();
 
-            var paymentDtos = new List<GetPaymentDTO>();
+            var paymentDtos = new List<GetPaymentByPaymentIdRequest>();
 
             foreach(var payment in payments)
             {
-                paymentDtos.Add(new GetPaymentDTO
+                paymentDtos.Add(new GetPaymentByPaymentIdRequest
                 {
                     PaymentId = payment.Id.ToString(),
                     PatientId = payment.PatientId.ToString(),
@@ -92,12 +92,12 @@ namespace ChawlaClinic.BL.Services
             return paymentDtos;
         }
 
-        public GetPaymentDTO? GetPaymentById(string paymentId)
+        public GetPaymentByPaymentIdRequest? GetPaymentById(string paymentId)
         {
             var payment = _context.Payments
                 .Where(p => p.Id.ToString() == paymentId &&
                             p.IsDeleted == false)
-                .Select(p => new GetPaymentDTO
+                .Select(p => new GetPaymentByPaymentIdRequest
                 {
                     PaymentId = p.Id.ToString(),
                     PatientId = p.PatientId.ToString(),

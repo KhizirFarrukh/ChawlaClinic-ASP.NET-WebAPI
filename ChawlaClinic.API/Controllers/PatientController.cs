@@ -1,5 +1,5 @@
 ﻿using ChawlaClinic.API.Models;
-using ChawlaClinic.BL.DTOs.Patient;
+using ChawlaClinic.BL.Requests.Patient;
 using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
 using ChawlaClinic.DAL.Entities;

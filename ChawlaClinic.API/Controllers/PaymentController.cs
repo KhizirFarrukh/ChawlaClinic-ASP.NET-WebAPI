@@ -1,5 +1,5 @@
 ﻿using ChawlaClinic.API.Models;
-using ChawlaClinic.BL.DTOs.Payment;
+using ChawlaClinic.BL.Requests.Payment;
 using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
 using Microsoft.AspNetCore.Mvc;
@@ -63,7 +63,7 @@ namespace ChawlaClinic.API.Controllers
         }
 
         [HttpPost("AddPayment")]
-        public IActionResult AddPayment(AddPaymentDTO dto)
+        public IActionResult AddPayment(CreatePaymentRequest dto)
         {
             try
             {

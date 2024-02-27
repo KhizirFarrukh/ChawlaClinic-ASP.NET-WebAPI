@@ -1,4 +1,4 @@
-﻿namespace ChawlaClinic.BL.DTOs.Patient
+﻿namespace ChawlaClinic.BL.Requests.Patient
 {
     public class AddEmergencyBurnPatientDTO
     {
