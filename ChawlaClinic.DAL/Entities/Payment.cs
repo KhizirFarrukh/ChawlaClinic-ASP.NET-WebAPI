@@ -13,9 +13,9 @@ public partial class Payment
 
     public int PatientId { get; set; }
 
-    public int? DiscountId { get; set; }
+    public int DiscountId { get; set; }
 
-    public virtual DiscountOption? Discount { get; set; }
+    public virtual DiscountOption Discount { get; set; } = null!;
 
     public virtual Patient Patient { get; set; } = null!;
 }

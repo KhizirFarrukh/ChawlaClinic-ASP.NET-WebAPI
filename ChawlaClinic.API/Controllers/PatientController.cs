@@ -82,7 +82,7 @@ namespace ChawlaClinic.API.Controllers
         }
 
         [HttpPost("AddPatient")]
-        public IActionResult AddPatient(AddPatientDTO dto)
+        public IActionResult AddPatient(CreatePatientRequest dto)
         {
             try
             {
@@ -97,7 +97,7 @@ namespace ChawlaClinic.API.Controllers
         }
 
         [HttpPost("AddEmergencyBurnPatient")]
-        public IActionResult AddEmergencyBurnPatient(AddEmergencyBurnPatientDTO dto)
+        public IActionResult AddEmergencyBurnPatient(CreateEmergencyBurnPatientRequest dto)
         {
             try
             {

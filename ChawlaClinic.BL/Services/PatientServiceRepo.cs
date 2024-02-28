@@ -1,4 +1,5 @@
 ﻿using ChawlaClinic.BL.Requests.Patient;
+using ChawlaClinic.BL.Responses.Patients;
 using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
 using ChawlaClinic.DAL;
@@ -19,12 +20,12 @@ namespace ChawlaClinic.BL.Services
         {
             _context = context;
         }
-        public List<GetPatientDTO>? GetPatients()
+        public List<GetPatientResponse>? GetPatients()
         {
             var patient_dicounts = _context.PatientDiscounts.ToList();
             var patients = _context.Patients
                 .Where(p => p.IsDeleted == false)
-                .Select(p => new GetPatientDTO
+                .Select(p => new GetPatientResponse
                 {
                     Id = p.Id,
                     Name = p.Name,
@@ -47,14 +48,14 @@ namespace ChawlaClinic.BL.Services
 
             return patients;
         }
-        public GetPatientDTO? GetPatientById(string Id)
+        public GetPatientResponse? GetPatientById(string Id)
         {
             var patient_dicounts = _context.PatientDiscounts.ToList();
             var patient = _context.Patients
                 .Where(p => 
                     p.Id.ToString() == Id &&
                     p.IsDeleted == false)
-                .Select(p => new GetPatientDTO
+                .Select(p => new GetPatientResponse
                 {
                     Id = p.Id,
                     Name = p.Name,
@@ -130,7 +131,7 @@ namespace ChawlaClinic.BL.Services
 
             return patients;
         }
-        public void AddPatient(AddPatientDTO dto)
+        public void AddPatient(CreatePatientRequest dto)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -176,7 +177,7 @@ namespace ChawlaClinic.BL.Services
                 }
             }
         }
-        public void AddPatient(AddEmergencyBurnPatientDTO dto)
+        public void AddPatient(CreateEmergencyBurnPatientRequest dto)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -227,7 +228,7 @@ namespace ChawlaClinic.BL.Services
         {
             var patientDtos = ParseExcelFile(excelFile);
         }
-        public (bool, string) UpdatePatient(UpdatePatientDTO dto)
+        public (bool, string) UpdatePatient(UpdatePatientRequest dto)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -302,9 +303,9 @@ namespace ChawlaClinic.BL.Services
         {
             return "";
         }
-        private List<AddPatientDTO>? ParseExcelFile(IFormFile excelFile)
+        private List<CreatePatientRequest>? ParseExcelFile(IFormFile excelFile)
         {
-            var patients = new List<AddPatientDTO>();
+            var patients = new List<CreatePatientRequest>();
 
             using (var stream = excelFile.OpenReadStream())
             {
@@ -316,7 +317,7 @@ namespace ChawlaClinic.BL.Services
 
                     for (int row = startRow; row <= worksheet.Dimension.End.Row; row++)
                     {
-                        var patient = new AddPatientDTO
+                        var patient = new CreatePatientRequest
                         {
                             Name = worksheet.Cells[row, 1].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
                             GuardianName = worksheet.Cells[row, 2].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),

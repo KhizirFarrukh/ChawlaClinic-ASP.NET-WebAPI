@@ -1,17 +1,18 @@
 ﻿using ChawlaClinic.BL.Requests.Patient;
+using ChawlaClinic.BL.Responses.Patients;
 
 namespace ChawlaClinic.BL.ServiceInterfaces
 {
     public interface IPatientServiceRepo
     {
-        List<GetPatientDTO>? GetPatients();
-        GetPatientDTO? GetPatientById(string Id);
+        List<GetPatientResponse>? GetPatients();
+        GetPatientResponse? GetPatientById(string Id);
         List<GetPatientForSearchDTO>? SearchPatient(string searchParam);
         List<GetPatientForSearchDTO>? SearchPatient(SearchPatientFiltersDTO filters);
-        void AddPatient(AddPatientDTO dto);
-        void AddPatient(AddEmergencyBurnPatientDTO dto);
+        void AddPatient(CreatePatientRequest dto);
+        void AddPatient(CreateEmergencyBurnPatientRequest dto);
         void AddPatient(IFormFile excelFile);
-        (bool, string) UpdatePatient(UpdatePatientDTO dto);
+        (bool, string) UpdatePatient(UpdatePatientRequest dto);
         bool DeletePatient(string Id);
     }
 }
