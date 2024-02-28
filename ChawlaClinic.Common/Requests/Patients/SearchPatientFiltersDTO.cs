@@ -1,6 +1,6 @@
 ﻿using ChawlaClinic.Common.Commons;
 
-namespace ChawlaClinic.BL.Requests.Patient
+namespace ChawlaClinic.Common.Requests.Patient
 {
     public class SearchPatientFiltersDTO
     {

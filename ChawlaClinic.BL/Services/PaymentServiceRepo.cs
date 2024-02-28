@@ -1,4 +1,4 @@
-﻿using ChawlaClinic.BL.Requests.Payment;
+﻿using ChawlaClinic.Common.Requests.Payment;
 using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
 using ChawlaClinic.Common.Helpers;
@@ -9,24 +9,24 @@ namespace ChawlaClinic.BL.Services
 {
     public class PaymentServiceRepo : IPaymentServiceRepo
     {
-        private ApplicationDbContext _context;
+        private ApplicationDbContext _dbContext;
         public PaymentServiceRepo(ApplicationDbContext context)
         {
-            _context = context;
+            _dbContext = context;
         }
 
         public bool AddPayment(CreatePaymentRequest dto)
         {
-            using (var transaction = _context.Database.BeginTransaction())
+            using (var transaction = _dbContext.Database.BeginTransaction())
             {
                 try
                 {
                     string UserId = "";
-                    var addUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
+                    var addUserId = _dbContext.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
 
                     if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
 
-                    var patient = _context.Patients.Where(p => p.Id.ToString() == dto.PatientId).FirstOrDefault();
+                    var patient = _dbContext.Patients.Where(p => p.Id.ToString() == dto.PatientId).FirstOrDefault();
 
                     if (patient == null) { return false; }
 
@@ -45,9 +45,9 @@ namespace ChawlaClinic.BL.Services
 
                     payment.SecureToken = CommonHelper.GenerateSecureToken(payment.TokenID);
 
-                    _context.Payments.Add(payment);
+                    _dbContext.Payments.Add(payment);
 
-                    _context.SaveChanges();
+                    _dbContext.SaveChanges();
 
                     transaction.Commit();
 
@@ -64,14 +64,14 @@ namespace ChawlaClinic.BL.Services
 
         public List<GetPaymentByPaymentIdRequest>? GetPayments(string patientId)
         {
-            var patient = _context.Patients
+            var patient = _dbContext.Patients
                 .Where(p => p.Id.ToString() == patientId &&
                             p.IsDeleted == false)
                 .FirstOrDefault();
 
             if (patient == null) { return null; }
 
-            var payments = _context.Payments
+            var payments = _dbContext.Payments
                 .Where(p => p.PatientId == patient.Id &&
                             p.IsDeleted == false)
                 .ToList();
@@ -94,7 +94,7 @@ namespace ChawlaClinic.BL.Services
 
         public GetPaymentByPaymentIdRequest? GetPaymentById(string paymentId)
         {
-            var payment = _context.Payments
+            var payment = _dbContext.Payments
                 .Where(p => p.Id.ToString() == paymentId &&
                             p.IsDeleted == false)
                 .Select(p => new GetPaymentByPaymentIdRequest

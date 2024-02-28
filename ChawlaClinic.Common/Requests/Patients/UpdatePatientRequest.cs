@@ -1,22 +1,23 @@
-﻿namespace ChawlaClinic.BL.Responses.Patients
+﻿using ChawlaClinic.Common.Enums;
+
+namespace ChawlaClinic.Common.Requests.Patient
 {
-    public class GetPatientResponse
+    public class UpdatePatientRequest
     {
-        public int Id { get; set; }
+        public int PatientId { get; set; }
         public string Name { get; set; } = null!;
         public string Description { get; set; } = null!;
         public string GuardianName { get; set; } = null!;
         public int AgeYears { get; set; }
         public int AgeMonths { get; set; }
-        public char Gender { get; set; } = char.MinValue;
-        public char Type { get; set; } = char.MinValue;
+        public Gender Gender { get; set; }
+        public PatientType Type { get; set; }
         public string Disease { get; set; } = null!;
         public string Address { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
         public string CaseNo { get; set; } = null!;
-        public bool Status { get; set; }
+        public PatientStatus Status { get; set; }
         public DateOnly FirstVisit { get; set; }
-        public int? DiscountId { get; set; }
-        public string Discount { get; set; } = null!;
+        public int DiscountId { get; set; }
     }
 }

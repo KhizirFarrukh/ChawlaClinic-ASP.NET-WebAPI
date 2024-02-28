@@ -1,4 +1,4 @@
-﻿using ChawlaClinic.BL.Requests.Payment;
+﻿using ChawlaClinic.Common.Requests.Payment;
 
 namespace ChawlaClinic.BL.ServiceInterfaces
 {

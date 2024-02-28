@@ -1,6 +1,6 @@
 ﻿using ChawlaClinic.Common.Enums;
 
-namespace ChawlaClinic.BL.Requests.Patient
+namespace ChawlaClinic.Common.Requests.Patient
 {
     public class CreateEmergencyBurnPatientRequest
     {

@@ -1,5 +1,5 @@
 ﻿using ChawlaClinic.API.Models;
-using ChawlaClinic.BL.Requests.Payment;
+using ChawlaClinic.Common.Requests.Payment;
 using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
 using Microsoft.AspNetCore.Mvc;

@@ -1,12 +1,12 @@
-﻿using ChawlaClinic.BL.Requests.Patient;
-using ChawlaClinic.BL.Responses.Patients;
+﻿using ChawlaClinic.Common.Requests.Patient;
+using ChawlaClinic.Common.Responses.Patients;
 
 namespace ChawlaClinic.BL.ServiceInterfaces
 {
     public interface IPatientServiceRepo
     {
-        List<GetPatientResponse>? GetPatients();
-        GetPatientResponse? GetPatientById(string Id);
+        List<PatientResponse>? GetPatients();
+        PatientResponse? GetPatientById(string Id);
         List<GetPatientForSearchDTO>? SearchPatient(string searchParam);
         List<GetPatientForSearchDTO>? SearchPatient(SearchPatientFiltersDTO filters);
         void AddPatient(CreatePatientRequest dto);

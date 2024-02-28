@@ -1,4 +1,4 @@
-﻿namespace ChawlaClinic.BL.Requests.Payment
+﻿namespace ChawlaClinic.Common.Requests.Payment
 {
     public class CreatePaymentRequest
     {

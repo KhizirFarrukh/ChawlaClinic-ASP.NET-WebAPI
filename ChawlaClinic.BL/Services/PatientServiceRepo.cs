@@ -1,78 +1,81 @@
-﻿using ChawlaClinic.BL.Requests.Patient;
-using ChawlaClinic.BL.Responses.Patients;
-using ChawlaClinic.BL.ServiceInterfaces;
+﻿using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
+using ChawlaClinic.Common.Enums;
+using ChawlaClinic.Common.Requests.Commons;
+using ChawlaClinic.Common.Requests.Patient;
+using ChawlaClinic.Common.Responses.Discounts;
+using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
-using Microsoft.EntityFrameworkCore.Storage;
 using OfficeOpenXml;
 using System.Data.Entity;
-using System.Reflection;
-using System.Transactions;
-using System.Xml.Linq;
 
 namespace ChawlaClinic.BL.Services
 {
     public class PatientServiceRepo : IPatientServiceRepo
     {
-        ApplicationDbContext _context;
-        public PatientServiceRepo(ApplicationDbContext context) 
+        ApplicationDbContext _dbContext;
+        public PatientServiceRepo(ApplicationDbContext context)
         {
-            _context = context;
+            _dbContext = context;
         }
-        public List<GetPatientResponse>? GetPatients()
+        public List<PatientResponse>? GetPatients(PagedRequest request)
         {
-            var patient_dicounts = _context.PatientDiscounts.ToList();
-            var patients = _context.Patients
-                .Where(p => p.IsDeleted == false)
-                .Select(p => new GetPatientResponse
+            var patientDiscounts = _dbContext.DiscountOptions.ToList();
+
+            var patients = _dbContext.Patients
+                .Select(x => new PatientResponse
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    GuardianName = p.GuardianName,
-                    AgeYears = p.AgeYears,
-                    AgeMonths = p.AgeMonths,
-                    Gender = p.Gender,
-                    Type = p.Type,
-                    Disease = p.Disease,
-                    Address = p.Address,
-                    PhoneNumber = p.PhoneNumber,
-                    CaseNo = p.CaseNo,
-                    Status = p.IsActive,
-                    FirstVisit = p.FirstVisit,
-                    DiscountId = p.DiscountId,
-                    Discount = patient_dicounts.Where(pd => pd.Id == p.DiscountId).Select(pd => pd.Title).FirstOrDefault() ?? ""
+                    PatientId = x.PatientId,
+                    Name = x.Name,
+                    Description = x.Description,
+                    GuardianName = x.GuardianName,
+                    AgeYears = x.AgeYears,
+                    AgeMonths = x.AgeMonths,
+                    Gender = x.Gender,
+                    Type = (PatientType)Enum.Parse(typeof(PatientType), x.Type),
+                    Disease = x.Disease,
+                    Address = x.Address,
+                    PhoneNumber = x.PhoneNumber,
+                    CaseNo = x.CaseNo,
+                    Status = x.Status,
+                    FirstVisit = x.FirstVisit,
+                    Discount = patientDiscounts
+                        .Where(y => y.DiscountId == x.DiscountId)
+                        .Select(y => new DiscountResponse { DiscountId = y.DiscountId, Title = y.Title })
+                        .FirstOrDefault(),
                 })
                 .ToList();
 
             return patients;
         }
-        public GetPatientResponse? GetPatientById(string Id)
+        public PatientResponse? GetPatientById(int PatientId)
         {
-            var patient_dicounts = _context.PatientDiscounts.ToList();
-            var patient = _context.Patients
-                .Where(p => 
-                    p.Id.ToString() == Id &&
-                    p.IsDeleted == false)
-                .Select(p => new GetPatientResponse
+            var patient = _dbContext.Patients
+                .Include(x => x.Discount)
+                .Where(x => x.PatientId == PatientId)
+                .Select(x => new PatientResponse
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    GuardianName = p.GuardianName,
-                    AgeYears = p.AgeYears,
-                    AgeMonths = p.AgeMonths,
-                    Gender = p.Gender,
-                    Type = p.Type,
-                    Disease = p.Disease,
-                    Address = p.Address,
-                    PhoneNumber = p.PhoneNumber,
-                    CaseNo = p.CaseNo,
-                    Status = p.IsActive,
-                    FirstVisit = p.FirstVisit,
-                    DiscountId = p.DiscountId,
-                    Discount = patient_dicounts.Where(pd => pd.Id == p.DiscountId).Select(pd => pd.Title).FirstOrDefault() ?? ""
+                    PatientId = x.PatientId,
+                    Name = x.Name,
+                    Description = x.Description,
+                    GuardianName = x.GuardianName,
+                    AgeYears = x.AgeYears,
+                    AgeMonths = x.AgeMonths,
+                    Gender = x.Gender,
+                    Type = (PatientType)Enum.Parse(typeof(PatientType), x.Type),
+                    Disease = x.Disease,
+                    Address = x.Address,
+                    PhoneNumber = x.PhoneNumber,
+                    CaseNo = x.CaseNo,
+                    Status = x.Status,
+                    FirstVisit = x.FirstVisit,
+                    Discount = x.Discount == null ? null :
+                    new DiscountResponse
+                    {
+                        DiscountId = x.Discount.DiscountId,
+                        Title = x.Discount.Title
+                    }
                 })
                 .FirstOrDefault();
 
@@ -82,8 +85,8 @@ namespace ChawlaClinic.BL.Services
         {
             searchParam = searchParam.ToUpper();
 
-            var patient_dicounts = _context.PatientDiscounts.ToList();
-            var patients = _context.Patients
+            var patient_dicounts = _dbContext.PatientDiscounts.ToList();
+            var patients = _dbContext.Patients
                 .Where(p =>
                     (p.Name.ToUpper().Contains(searchParam) ||
                         p.PhoneNumber.ToUpper().Contains(searchParam) ||
@@ -105,9 +108,9 @@ namespace ChawlaClinic.BL.Services
         {
             filters.SearchParam = filters.SearchParam.ToUpper();
 
-            var patient_dicounts = _context.PatientDiscounts.ToList();
-            
-            var patients = _context.Patients
+            var patient_dicounts = _dbContext.PatientDiscounts.ToList();
+
+            var patients = _dbContext.Patients
                 .Where(p =>
                     (p.Name.ToUpper().Contains(filters.SearchParam) ||
                      p.PhoneNumber.ToUpper().Contains(filters.SearchParam) ||
@@ -133,18 +136,18 @@ namespace ChawlaClinic.BL.Services
         }
         public void AddPatient(CreatePatientRequest dto)
         {
-            using (var transaction = _context.Database.BeginTransaction())
+            using (var transaction = _dbContext.Database.BeginTransaction())
             {
                 try
                 {
                     string UserId = "";
-                    var addUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
+                    var addUserId = _dbContext.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
 
                     if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
 
                     if (dto.CaseNo == "") { dto.CaseNo = GenerateCaseNo(dto.Type); }
 
-                    _context.Patients.Add(new Patient
+                    _dbContext.Patients.Add(new Patient
                     {
                         Name = dto.Name,
                         GuardianName = dto.GuardianName,
@@ -165,7 +168,7 @@ namespace ChawlaClinic.BL.Services
                         ModifiedBy = null
                     });
 
-                    _context.SaveChanges();
+                    _dbContext.SaveChanges();
 
                     transaction.Commit();
                 }
@@ -179,19 +182,19 @@ namespace ChawlaClinic.BL.Services
         }
         public void AddPatient(CreateEmergencyBurnPatientRequest dto)
         {
-            using (var transaction = _context.Database.BeginTransaction())
+            using (var transaction = _dbContext.Database.BeginTransaction())
             {
                 try
                 {
                     string UserId = "";
-                    var addUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
+                    var addUserId = _dbContext.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
 
                     if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
 
                     char type = 'B';
                     string caseNo = GenerateCaseNo(type);
 
-                    _context.Patients.Add(new Patient
+                    _dbContext.Patients.Add(new Patient
                     {
                         Name = dto.Name,
                         GuardianName = dto.GuardianName,
@@ -212,7 +215,7 @@ namespace ChawlaClinic.BL.Services
                         ModifiedBy = null
                     });
 
-                    _context.SaveChanges();
+                    _dbContext.SaveChanges();
 
                     transaction.Commit();
                 }
@@ -230,18 +233,18 @@ namespace ChawlaClinic.BL.Services
         }
         public (bool, string) UpdatePatient(UpdatePatientRequest dto)
         {
-            using (var transaction = _context.Database.BeginTransaction())
+            using (var transaction = _dbContext.Database.BeginTransaction())
             {
                 try
                 {
                     string UserId = "";
-                    var updateUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
+                    var updateUserId = _dbContext.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
 
                     if (updateUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
 
-                    var patient = _context.Patients.Where(p => p.Id.ToString() == dto.Id).FirstOrDefault();
+                    var patient = _dbContext.Patients.Where(p => p.Id.ToString() == dto.Id).FirstOrDefault();
 
-                    if(patient == null) { return (false, string.Format(CustomMessage.NOT_FOUND, "Patient")); }
+                    if (patient == null) { return (false, string.Format(CustomMessage.NOT_FOUND, "Patient")); }
 
                     if (dto.CaseNo == "") { dto.CaseNo = GenerateCaseNo(dto.Type); }
 
@@ -257,7 +260,7 @@ namespace ChawlaClinic.BL.Services
                     patient.ModifiedOn = DateTime.Now;
                     patient.ModifiedBy = updateUserId ?? -1;
 
-                    _context.SaveChanges();
+                    _dbContext.SaveChanges();
 
                     transaction.Commit();
 
@@ -273,18 +276,18 @@ namespace ChawlaClinic.BL.Services
         }
         public bool DeletePatient(string Id)
         {
-            using (var transaction = _context.Database.BeginTransaction())
+            using (var transaction = _dbContext.Database.BeginTransaction())
             {
                 try
                 {
-                    var patient = _context.Patients.Where(p => p.Id.ToString() == Id).FirstOrDefault();
+                    var patient = _dbContext.Patients.Where(p => p.Id.ToString() == Id).FirstOrDefault();
 
                     if (patient == null) { return false; }
 
                     patient.IsActive = false;
                     patient.IsDeleted = true;
 
-                    _context.SaveChanges();
+                    _dbContext.SaveChanges();
 
                     transaction.Commit();
 
