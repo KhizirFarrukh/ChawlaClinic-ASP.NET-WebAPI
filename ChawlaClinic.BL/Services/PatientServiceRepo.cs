@@ -1,6 +1,7 @@
 ﻿using ChawlaClinic.BL.ServiceInterfaces;
 using ChawlaClinic.Common.Commons;
 using ChawlaClinic.Common.Enums;
+using ChawlaClinic.Common.Exceptions;
 using ChawlaClinic.Common.Requests.Commons;
 using ChawlaClinic.Common.Requests.Patient;
 using ChawlaClinic.Common.Responses.Discounts;
@@ -8,7 +9,10 @@ using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq.Dynamic.Core;
+using static OfficeOpenXml.ExcelErrorValue;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ChawlaClinic.BL.Services
 {
@@ -119,7 +123,14 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<bool> AddPatient(CreatePatientRequest request)
         {
-            if (request.CaseNo == "") { request.CaseNo = await GenerateCaseNo(request.Type); }
+            var firstVisit = request.FirstVisit ?? DateOnly.FromDateTime(DateTime.Now);
+
+            if ((request.CaseNo.Length == 4 && !int.TryParse(request.CaseNo, out _)) || 
+                (!string.IsNullOrEmpty(request.CaseNo) && request.CaseNo.Length != 6))
+                throw new ValidationFailedException("Invalid Case Number.");
+
+            if (string.IsNullOrEmpty(request.CaseNo) || request.CaseNo.Length == 4)
+                request.CaseNo = await GenerateCaseNo(request.Type, firstVisit, request.CaseNo);
 
             await _dbContext.Patients.AddAsync(new Patient
             {
@@ -133,55 +144,53 @@ namespace ChawlaClinic.BL.Services
                 Address = request.Address,
                 PhoneNumber = request.PhoneNumber,
                 CaseNo = request.CaseNo,
-                FirstVisit = request.FirstVisit,
+                FirstVisit = firstVisit,
                 Status = PatientStatus.Active.ToString(),
             });
 
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> AddPatient(CreateEmergencyBurnPatientRequest dto)
+        public async Task<bool> AddPatient(CreateEmergencyBurnPatientRequest request)
         {
-            string caseNo = await GenerateCaseNo(PatientType.Burns);
+            var firstVisit = DateOnly.FromDateTime(DateTime.Now);
+
+            string caseNo = await GenerateCaseNo(PatientType.Burns, firstVisit, null);
 
             await _dbContext.Patients.AddAsync(new Patient
             {
-                Name = dto.Name,
-                GuardianName = dto.GuardianName,
-                AgeYears = dto.AgeYears,
-                AgeMonths = dto.AgeMonths,
-                Gender = ((char)dto.Gender).ToString(),
+                Name = request.Name,
+                GuardianName = request.GuardianName,
+                AgeYears = request.AgeYears,
+                AgeMonths = request.AgeMonths,
+                Gender = ((char)request.Gender).ToString(),
                 Type = ((char)PatientType.Burns).ToString(),
                 Disease = null,
                 Address = null,
                 PhoneNumber = null,
                 CaseNo = caseNo,
-                FirstVisit = DateOnly.FromDateTime(DateTime.Now),
+                FirstVisit = firstVisit,
                 Status = PatientStatus.Active.ToString(),
             });
 
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> UpdatePatient(UpdatePatientRequest dto)
+        public async Task<bool> UpdatePatient(UpdatePatientRequest request)
         {
-            var patient = await _dbContext.Patients.Where(p => p.Id.ToString() == dto.Id).FirstOrDefaultAsync();
+            var patient = await _dbContext.Patients.Where(p => p.PatientId == request.PatientId).FirstOrDefaultAsync();
 
-            if (patient == null) { return (false, string.Format(CustomMessage.NOT_FOUND, "Patient")); }
+            if (patient == null) throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
 
-            if (dto.CaseNo == "") { dto.CaseNo = await GenerateCaseNo(dto.Type); }
-
-            patient.Name = dto.Name;
-            patient.GuardianName = dto.GuardianName;
-            patient.AgeYears = dto.AgeYears;
-            patient.AgeMonths = dto.AgeMonths;
-            patient.Gender = dto.Gender;
-            patient.Disease = dto.Disease;
-            patient.Address = dto.Address;
-            patient.PhoneNumber = dto.PhoneNumber;
-            patient.FirstVisit = dto.FirstVisit;
-            patient.ModifiedOn = DateTime.Now;
-            patient.ModifiedBy = updateUserId ?? -1;
+            patient.Name = request.Name;
+            patient.GuardianName = request.GuardianName;
+            patient.AgeYears = request.AgeYears;
+            patient.AgeMonths = request.AgeMonths;
+            patient.Gender = ((char)request.Gender).ToString();
+            patient.Disease = request.Disease;
+            patient.Address = request.Address;
+            patient.PhoneNumber = request.PhoneNumber;
+            patient.FirstVisit = request.FirstVisit;
 
             return await _dbContext.SaveChangesAsync() > 0;
         }
@@ -190,16 +199,40 @@ namespace ChawlaClinic.BL.Services
         {
             var patient = await _dbContext.Patients.Where(p => p.PatientId == patientId).FirstOrDefaultAsync();
 
-            if (patient == null) { return false; }
+            if (patient == null) throw new NotFoundException($"Patient with ID {patientId} was not found.");
 
             _dbContext.Patients.Remove(patient);
 
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        private async Task<string> GenerateCaseNo(PatientType type)
+        private async Task<string> GenerateCaseNo(PatientType type, DateOnly firstVisit, string? caseNo)
         {
-            return "";
+            var newCaseNo = firstVisit.Year.ToString().Substring(2) + ((char)type) + '-';
+
+            if (string.IsNullOrEmpty(caseNo))
+            {
+                var caseNoMax = await _dbContext.Patients
+                    .Where(x => x.CaseNo.StartsWith(newCaseNo))
+                    .Select(x => int.Parse(x.CaseNo.Substring(x.CaseNo.Length - 6)))
+                    .MaxAsync();
+
+                newCaseNo += (caseNoMax + 1).ToString();
+            }
+            else if(caseNo.Length == 4)
+            {
+                var caseNoMax = await _dbContext.Patients
+                    .Where(x => x.CaseNo.StartsWith(newCaseNo) && x.CaseNo.EndsWith(caseNo))
+                    .Select(x => int.Parse(x.CaseNo.Substring(x.CaseNo.Length - 6, 2)))
+                    .MaxAsync();
+
+                if (caseNoMax == 99)
+                    throw new BadRequestException("Already maximum number of case numbers exists for the last 4 digits of token number provided.");
+
+                newCaseNo = newCaseNo + (caseNoMax + 1).ToString("D2") + caseNo;
+            }
+
+            return newCaseNo;
         }
     }
 }
