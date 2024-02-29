@@ -21,7 +21,7 @@ public partial class Patient
 
     public string GuardianName { get; set; } = null!;
 
-    public string Disease { get; set; } = null!;
+    public string? Disease { get; set; }
 
     public string? Address { get; set; }
 
@@ -29,7 +29,7 @@ public partial class Patient
 
     public string Status { get; set; } = null!;
 
-    public DateTime FirstVisit { get; set; }
+    public DateOnly FirstVisit { get; set; }
 
     public int DiscountId { get; set; }
 

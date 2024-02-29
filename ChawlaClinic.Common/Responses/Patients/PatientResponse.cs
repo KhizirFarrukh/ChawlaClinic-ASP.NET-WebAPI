@@ -18,7 +18,7 @@ namespace ChawlaClinic.Common.Responses.Patients
         public string? PhoneNumber { get; set; }
         public string CaseNo { get; set; } = null!;
         public PatientStatus Status { get; set; } = null!;
-        public DateTime FirstVisit { get; set; }
+        public DateOnly FirstVisit { get; set; }
         public DiscountResponse? Discount {  get; set; }
     }
 }
