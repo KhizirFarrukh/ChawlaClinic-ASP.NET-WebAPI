@@ -7,8 +7,7 @@ using ChawlaClinic.Common.Responses.Discounts;
 using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
-using OfficeOpenXml;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace ChawlaClinic.BL.Services
 {
@@ -38,7 +37,7 @@ namespace ChawlaClinic.BL.Services
                     Address = x.Address,
                     PhoneNumber = x.PhoneNumber,
                     CaseNo = x.CaseNo,
-                    Status = x.Status,
+                    Status = (PatientStatus)Enum.Parse(typeof(PatientStatus), x.Status),
                     FirstVisit = x.FirstVisit,
                     Discount = patientDiscounts
                         .Where(y => y.DiscountId == x.DiscountId)
@@ -68,7 +67,7 @@ namespace ChawlaClinic.BL.Services
                     Address = x.Address,
                     PhoneNumber = x.PhoneNumber,
                     CaseNo = x.CaseNo,
-                    Status = x.Status,
+                    Status = (PatientStatus)Enum.Parse(typeof(PatientStatus), x.Status),
                     FirstVisit = x.FirstVisit,
                     Discount = x.Discount == null ? null :
                     new DiscountResponse
@@ -81,46 +80,41 @@ namespace ChawlaClinic.BL.Services
 
             return patient;
         }
-        public List<GetPatientForSearchDTO>? SearchPatient(string searchParam)
+        public List<PatientSearchResponse>? SearchPatient(string searchParam)
         {
-            searchParam = searchParam.ToUpper();
-
-            var patient_dicounts = _dbContext.PatientDiscounts.ToList();
+            var patient_dicounts = _dbContext.DiscountOptions.ToList();
             var patients = _dbContext.Patients
                 .Where(p =>
-                    (p.Name.ToUpper().Contains(searchParam) ||
-                        p.PhoneNumber.ToUpper().Contains(searchParam) ||
-                        p.CaseNo.ToUpper().Contains(searchParam)) &&
-                    p.IsDeleted == false)
-                .Select(p => new GetPatientForSearchDTO
+                     p.Name.Contains(searchParam, StringComparison.CurrentCultureIgnoreCase) ||
+                    (p.PhoneNumber != null && p.PhoneNumber.Contains(searchParam, StringComparison.CurrentCultureIgnoreCase)) ||
+                     p.CaseNo.Contains(searchParam, StringComparison.CurrentCultureIgnoreCase))
+                .Select(p => new PatientSearchResponse
                 {
-                    Id = p.Id,
+                    PatientId = p.PatientId,
                     Name = p.Name,
                     CaseNo = p.CaseNo,
-                    Status = p.IsActive,
+                    Status = (PatientStatus)Enum.Parse(typeof(PatientStatus), x.Status),
                     FirstVisit = p.FirstVisit
                 })
                 .ToList();
 
             return patients;
         }
-        public List<GetPatientForSearchDTO>? SearchPatient(SearchPatientFiltersDTO filters)
+        public List<PatientSearchResponse>? SearchPatient(SearchPatientRequest filters)
         {
-            filters.SearchParam = filters.SearchParam.ToUpper();
-
-            var patient_dicounts = _dbContext.PatientDiscounts.ToList();
+            var patient_dicounts = _dbContext.DiscountOptions.ToList();
 
             var patients = _dbContext.Patients
                 .Where(p =>
-                    (p.Name.ToUpper().Contains(filters.SearchParam) ||
-                     p.PhoneNumber.ToUpper().Contains(filters.SearchParam) ||
-                     p.CaseNo.ToUpper().Contains(filters.SearchParam)) &&
-                    (p.Type == filters.Type) &&
+                    (p.Name.Contains(filters.SearchParam, StringComparison.CurrentCultureIgnoreCase) ||
+                    (p.PhoneNumber != null && p.PhoneNumber.Contains(filters.SearchParam, StringComparison.CurrentCultureIgnoreCase)) ||
+                     p.CaseNo.Contains(filters.SearchParam, StringComparison.CurrentCultureIgnoreCase)) &&
+                    (p.Type == ((char)filters.Type).ToString()) &&
                     (filters.FirstVisitStart == null || p.FirstVisit >= filters.FirstVisitStart) &&
                     (filters.FirstVisitEnd == null || p.FirstVisit <= filters.FirstVisitEnd) &&
                     (filters.ActiveStatus == FilterActiveStatus.All || p.IsActive == (filters.ActiveStatus == FilterActiveStatus.Active)) &&
                     (filters.DeleteStatus == FilterDeleteStatus.All || p.IsDeleted == (filters.DeleteStatus == FilterDeleteStatus.Deleted)))
-                .Select(p => new GetPatientForSearchDTO
+                .Select(p => new PatientSearchResponse
                 {
                     Id = p.Id,
                     Name = p.Name,
