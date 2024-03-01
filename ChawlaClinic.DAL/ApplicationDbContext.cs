@@ -89,7 +89,7 @@ public partial class ApplicationDbContext : DbContext
                 .IsFixedLength()
                 .HasColumnName("type");
 
-            entity.HasOne(d => d.Discount).WithMany(p => p.Patients)
+            entity.HasOne(d => d.Discount).WithMany(x => x.Patients)
                 .HasForeignKey(d => d.DiscountId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_patient_discount");
@@ -114,11 +114,11 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.DiscountId).HasColumnName("discount_id");
             entity.Property(e => e.PatientId).HasColumnName("patient_id");
 
-            entity.HasOne(d => d.Discount).WithMany(p => p.Payments)
+            entity.HasOne(d => d.Discount).WithMany(x => x.Payments)
                 .HasForeignKey(d => d.DiscountId)
                 .HasConstraintName("fk_payment_discount");
 
-            entity.HasOne(d => d.Patient).WithMany(p => p.Payments)
+            entity.HasOne(d => d.Patient).WithMany(x => x.Payments)
                 .HasForeignKey(d => d.PatientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_payment_patient");

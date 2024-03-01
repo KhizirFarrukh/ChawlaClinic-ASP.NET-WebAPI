@@ -1,9 +1,13 @@
-﻿using ChawlaClinic.Common.Requests.Payment;
-using ChawlaClinic.BL.ServiceInterfaces;
-using ChawlaClinic.Common.Commons;
+﻿using ChawlaClinic.BL.ServiceInterfaces;
+using ChawlaClinic.Common.Exceptions;
 using ChawlaClinic.Common.Helpers;
+using ChawlaClinic.Common.Requests.Payment;
+using ChawlaClinic.Common.Responses.Discounts;
+using ChawlaClinic.Common.Responses.Payments;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
+using System.Data.Entity;
+using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
 {
@@ -15,98 +19,116 @@ namespace ChawlaClinic.BL.Services
             _dbContext = context;
         }
 
-        public bool AddPayment(CreatePaymentRequest dto)
+        public async Task<bool> AddPayment(CreatePaymentRequest request)
         {
-            using (var transaction = _dbContext.Database.BeginTransaction())
+            var patient = await _dbContext.Patients.Where(x => x.PatientId == request.PatientId).FirstOrDefaultAsync();
+
+            if (patient == null)
+                throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
+
+            //var discount = await _dbContext.DiscountOptions.Where(x => x.DiscountId == request.DiscountId).FirstOrDefaultAsync();
+
+            //if (discount == null)
+            //    throw new NotFoundException($"Discount with ID {request.DiscountId} was not found.");
+
+            var payment = new Payment
             {
-                try
+                AmountPaid = request.AmountPaid,
+                DateTime = request.DateTime ?? DateTime.Now,
+                PatientId = patient.PatientId,
+                DiscountId = patient.DiscountId
+            };
+
+            payment.SecureToken = CommonHelper.GenerateSecureToken(payment.TokenID);
+
+            await _dbContext.Payments.AddAsync(payment);
+
+            return await _dbContext.SaveChangesAsync() > 0;
+        }
+
+        public async Task<List<GetPaymentResponse>?> GetPaymentsByPatientId(GetPaymentsByPatientIdRequest request)
+        {
+            var patient = await _dbContext.Patients
+                .Where(x => x.PatientId == request.PatientId)
+                .FirstOrDefaultAsync();
+
+            if (patient == null)
+                throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
+
+            var sorting = request.GetSortingString();
+
+            var payments = await _dbContext.Payments
+                .Include(x => x.Discount)
+                .Where(x => x.PatientId == patient.PatientId)
+                .Select(x => new GetPaymentResponse
                 {
-                    string UserId = "";
-                    var addUserId = _dbContext.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
-
-                    if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
-
-                    var patient = _dbContext.Patients.Where(p => p.Id.ToString() == dto.PatientId).FirstOrDefault();
-
-                    if (patient == null) { return false; }
-
-                    var payment = new Payment
+                    PaymentId = x.PaymentId,
+                    AmountPaid = x.AmountPaid,
+                    DateTime = x.DateTime,
+                    Discount = new DiscountResponse
                     {
-                        PatientId = Guid.Parse(dto.PatientId),
-                        AmountPaid = dto.AmountPaid,
-                        PaymentDate = dto.PaymentDate,
-                        IsActive = true,
-                        IsDeleted = false,
-                        AddedOn = DateTime.UtcNow,
-                        AddedBy = addUserId ?? -1,
-                        ModifiedOn = null,
-                        ModifiedBy = null
-                    };
-
-                    payment.SecureToken = CommonHelper.GenerateSecureToken(payment.TokenID);
-
-                    _dbContext.Payments.Add(payment);
-
-                    _dbContext.SaveChanges();
-
-                    transaction.Commit();
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-
-                    throw ex;
-                }
-            }
-        }
-
-        public List<GetPaymentByPaymentIdRequest>? GetPayments(string patientId)
-        {
-            var patient = _dbContext.Patients
-                .Where(p => p.Id.ToString() == patientId &&
-                            p.IsDeleted == false)
-                .FirstOrDefault();
-
-            if (patient == null) { return null; }
-
-            var payments = _dbContext.Payments
-                .Where(p => p.PatientId == patient.Id &&
-                            p.IsDeleted == false)
-                .ToList();
-
-            var paymentDtos = new List<GetPaymentByPaymentIdRequest>();
-
-            foreach(var payment in payments)
-            {
-                paymentDtos.Add(new GetPaymentByPaymentIdRequest
-                {
-                    PaymentId = payment.Id.ToString(),
-                    PatientId = payment.PatientId.ToString(),
-                    AmountPaid = payment.AmountPaid,
-                    PaymentDate = payment.PaymentDate,
-                });
-            }
-
-            return paymentDtos;
-        }
-
-        public GetPaymentByPaymentIdRequest? GetPaymentById(string paymentId)
-        {
-            var payment = _dbContext.Payments
-                .Where(p => p.Id.ToString() == paymentId &&
-                            p.IsDeleted == false)
-                .Select(p => new GetPaymentByPaymentIdRequest
-                {
-                    PaymentId = p.Id.ToString(),
-                    PatientId = p.PatientId.ToString(),
-                    AmountPaid = p.AmountPaid,
-                    PaymentDate = p.PaymentDate,
+                        DiscountId = x.Discount.DiscountId,
+                        Title = x.Discount.Title
+                    }
                 })
-                .FirstOrDefault();
-            
-            return payment;
+                .OrderBy($"{request.SortColumn} {sorting}")
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
+                .ToListAsync();
+
+            return payments;
         }
+
+        public async Task<GetPaymentResponse?> GetPaymentByPaymentId(int paymentId)
+        {
+            return await _dbContext.Payments
+                .Include(x => x.Discount)
+                .Where(x => x.PaymentId == paymentId)
+                .Select(x => new GetPaymentResponse
+                {
+                    PaymentId = x.PaymentId,
+                    AmountPaid = x.AmountPaid,
+                    DateTime = x.DateTime,
+                    Discount = new DiscountResponse
+                    {
+                        DiscountId = x.Discount.DiscountId,
+                        Title = x.Discount.Title
+                    }
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> UpdatePayment(UpdatePaymentRequest request)
+        {
+            var discount = await _dbContext.DiscountOptions.Where(x => x.DiscountId == request.DiscountId).FirstOrDefaultAsync();
+
+            if (discount == null)
+                throw new NotFoundException($"Discount with ID {request.DiscountId} was not found.");
+
+            var payment = await _dbContext.Payments.Where(x => x.PaymentId == request.PaymentId).FirstOrDefaultAsync();
+
+            if (payment == null) 
+                throw new NotFoundException($"Payment with ID {request.PaymentId} was not found.");
+
+            payment.AmountPaid = request.AmountPaid;
+            payment.DateTime = request.DateTime;
+            payment.DiscountId = request.DiscountId;
+            payment.Discount = discount;
+
+            return await _dbContext.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeletePayment(int paymentId)
+        {
+            var payment = await _dbContext.Payments.Where(x => x.PaymentId == paymentId).FirstOrDefaultAsync();
+
+            if (payment == null) 
+                throw new NotFoundException($"Payment with ID {paymentId} was not found.");
+
+            _dbContext.Payments.Remove(payment);
+
+            return await _dbContext.SaveChangesAsync() > 0;
+        }
+
     }
 }

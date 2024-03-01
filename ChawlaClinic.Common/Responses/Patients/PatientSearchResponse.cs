@@ -1,6 +1,6 @@
 ﻿using ChawlaClinic.Common.Enums;
 
-namespace ChawlaClinic.Common.Requests.Patient
+namespace ChawlaClinic.Common.Responses.Patients
 {
     public class PatientSearchResponse
     {

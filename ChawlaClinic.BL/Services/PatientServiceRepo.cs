@@ -1,5 +1,4 @@
 ﻿using ChawlaClinic.BL.ServiceInterfaces;
-using ChawlaClinic.Common.Commons;
 using ChawlaClinic.Common.Enums;
 using ChawlaClinic.Common.Exceptions;
 using ChawlaClinic.Common.Requests.Commons;
@@ -9,10 +8,7 @@ using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq.Dynamic.Core;
-using static OfficeOpenXml.ExcelErrorValue;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ChawlaClinic.BL.Services
 {
@@ -27,7 +23,7 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<List<PatientResponse>?> GetPatients(PagedRequest request)
         {
-            var sorting = request.IsAscending ? "ascending" : "descending";
+            var sorting = request.GetSortingString();
 
             var patients = await _dbContext.Patients
                 .Include(x => x.Discount)
@@ -95,19 +91,19 @@ namespace ChawlaClinic.BL.Services
             return patient;
         }
 
-        public async Task<List<PatientSearchResponse>?> SearchPatient(SearchPatientRequest filters)
+        public async Task<List<PatientSearchResponse>?> SearchPatient(SearchPatientRequest request)
         {
-            var sorting = filters.IsAscending ? "ascending" : "descending";
+            var sorting = request.GetSortingString();
 
             var patients = await _dbContext.Patients
                 .Where(x =>
-                    (x.Name.Contains(filters.SearchParam, StringComparison.CurrentCultureIgnoreCase) ||
-                    (x.PhoneNumber != null && x.PhoneNumber.Contains(filters.SearchParam, StringComparison.CurrentCultureIgnoreCase)) ||
-                     x.CaseNo.Contains(filters.SearchParam, StringComparison.CurrentCultureIgnoreCase)) &&
-                    (filters.Type == null || x.Type == ((char)filters.Type).ToString()) &&
-                    (filters.FirstVisitStart == null || x.FirstVisit >= filters.FirstVisitStart) &&
-                    (filters.FirstVisitEnd == null || x.FirstVisit <= filters.FirstVisitEnd) &&
-                    (filters.Status == null || x.Status == filters.Status.ToString()))
+                    (x.Name.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase) ||
+                    (x.PhoneNumber != null && x.PhoneNumber.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase)) ||
+                     x.CaseNo.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase)) &&
+                    (request.Type == null || x.Type == ((char)request.Type).ToString()) &&
+                    (request.FirstVisitStart == null || x.FirstVisit >= request.FirstVisitStart) &&
+                    (request.FirstVisitEnd == null || x.FirstVisit <= request.FirstVisitEnd) &&
+                    (request.Status == null || x.Status == request.Status.ToString()))
                 .Select(x => new PatientSearchResponse
                 {
                     PatientId = x.PatientId,
@@ -117,9 +113,9 @@ namespace ChawlaClinic.BL.Services
                     Status = (PatientStatus)Enum.Parse(typeof(PatientStatus), x.Status),
                     FirstVisit = x.FirstVisit
                 })
-                .OrderBy($"{filters.SortColumn} {sorting}")
-                .Skip(filters.Page * filters.Size)
-                .Take(filters.Size)
+                .OrderBy($"{request.SortColumn} {sorting}")
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
                 .ToListAsync();
 
             return patients;
@@ -129,7 +125,7 @@ namespace ChawlaClinic.BL.Services
         {
             var firstVisit = request.FirstVisit ?? DateOnly.FromDateTime(DateTime.Now);
 
-            if ((request.CaseNo.Length == 4 && !int.TryParse(request.CaseNo, out _)) || 
+            if ((request.CaseNo.Length == 4 && !int.TryParse(request.CaseNo, out _)) ||
                 (!string.IsNullOrEmpty(request.CaseNo) && request.CaseNo.Length != 6))
                 throw new ValidationFailedException("Invalid Case Number.");
 
@@ -182,7 +178,7 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<bool> UpdatePatient(UpdatePatientRequest request)
         {
-            var patient = await _dbContext.Patients.Where(p => p.PatientId == request.PatientId).FirstOrDefaultAsync();
+            var patient = await _dbContext.Patients.Where(x => x.PatientId == request.PatientId).FirstOrDefaultAsync();
 
             if (patient == null) throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
 
@@ -201,7 +197,7 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<bool> DeletePatient(int patientId)
         {
-            var patient = await _dbContext.Patients.Where(p => p.PatientId == patientId).FirstOrDefaultAsync();
+            var patient = await _dbContext.Patients.Where(x => x.PatientId == patientId).FirstOrDefaultAsync();
 
             if (patient == null) throw new NotFoundException($"Patient with ID {patientId} was not found.");
 
@@ -223,7 +219,7 @@ namespace ChawlaClinic.BL.Services
 
                 newCaseNo += (caseNoMax + 1).ToString();
             }
-            else if(caseNo.Length == 4)
+            else if (caseNo.Length == 4)
             {
                 var caseNoMax = await _dbContext.Patients
                     .Where(x => x.CaseNo.StartsWith(newCaseNo) && x.CaseNo.EndsWith(caseNo))

@@ -14,5 +14,7 @@
             IsAscending = isAscending ?? true;
             SortColumn = sortColumn;
         }
+
+        public string GetSortingString() => IsAscending ? "ascending" : "descending";
     }
 }
