@@ -64,7 +64,7 @@ namespace ChawlaClinic.API.Controllers
         }
 
         [HttpPost("AddPayment")]
-        public async Task<IActionResult> AddPayment(CreatePaymentRequest request)
+        public async Task<IActionResult> AddPayment([FromBody] CreatePaymentRequest request)
         {
             try
             {

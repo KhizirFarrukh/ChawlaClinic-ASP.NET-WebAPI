@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS patient
   name varchar(256) NOT NULL,
   age_years int NOT NULL DEFAULT 0,
   age_months int NOT NULL DEFAULT 0,
-  gender char(1) NOT NULL,
+  gender char(1) NOT NULL CHECK (type in ('M', 'F')),
   guardian_name varchar(256) NOT NULL,
   disease varchar(512) DEFAULT NULL,
   address varchar(128) DEFAULT NULL,

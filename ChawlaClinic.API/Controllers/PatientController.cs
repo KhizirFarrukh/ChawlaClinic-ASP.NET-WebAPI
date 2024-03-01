@@ -90,7 +90,7 @@ namespace ChawlaClinic.API.Controllers
         }
 
         [HttpPost("AddPatient")]
-        public async Task<IActionResult> AddPatient(CreatePatientRequest request)
+        public async Task<IActionResult> AddPatient([FromBody] CreatePatientRequest request)
         {
             try
             {
@@ -115,7 +115,7 @@ namespace ChawlaClinic.API.Controllers
         }
 
         [HttpPost("AddEmergencyBurnPatient")]
-        public async Task<IActionResult> AddEmergencyBurnPatient(CreateEmergencyBurnPatientRequest request)
+        public async Task<IActionResult> AddEmergencyBurnPatient([FromBody] CreateEmergencyBurnPatientRequest request)
         {
             try
             {

@@ -6,7 +6,7 @@ namespace ChawlaClinic.Common.Requests.Patient
     public class SearchPatientRequest : PagedRequest
     {
         public string SearchParam { get; set; } = null!;
-        public PatientType? Type { get; set; }
+        public char? Type { get; set; }
         public PatientStatus? Status { get; set; }
         public DateTime? FirstVisitStart { get; set; }
         public DateTime? FirstVisitEnd { get; set; }

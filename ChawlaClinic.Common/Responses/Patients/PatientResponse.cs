@@ -12,7 +12,7 @@ namespace ChawlaClinic.Common.Responses.Patients
         public int AgeYears { get; set; }
         public int AgeMonths { get; set; }
         public string Gender { get; set; } = null!;
-        public PatientType Type { get; set; }
+        public char Type { get; set; }
         public string? Disease { get; set; }
         public string? Address { get; set; }
         public string? PhoneNumber { get; set; }

@@ -32,7 +32,7 @@ namespace ChawlaClinic.BL.Services
                     AgeYears = x.AgeYears,
                     AgeMonths = x.AgeMonths,
                     Gender = x.Gender,
-                    Type = (PatientType)Enum.Parse(typeof(PatientType), x.Type),
+                    Type = x.Type[0],
                     Disease = x.Disease,
                     Address = x.Address,
                     PhoneNumber = x.PhoneNumber,
@@ -68,7 +68,7 @@ namespace ChawlaClinic.BL.Services
                     AgeYears = x.AgeYears,
                     AgeMonths = x.AgeMonths,
                     Gender = x.Gender,
-                    Type = (PatientType)Enum.Parse(typeof(PatientType), x.Type),
+                    Type = x.Type[0],
                     Disease = x.Disease,
                     Address = x.Address,
                     PhoneNumber = x.PhoneNumber,
@@ -121,8 +121,7 @@ namespace ChawlaClinic.BL.Services
         {
             var firstVisit = request.FirstVisit ?? DateTime.Now;
 
-            if ((request.CaseNo.Length == 4 && !int.TryParse(request.CaseNo, out _)) ||
-                (!string.IsNullOrEmpty(request.CaseNo) && request.CaseNo.Length != 6))
+            if (request.CaseNo != null && ((request.CaseNo.Length == 4 && !int.TryParse(request.CaseNo, out _)) || request.CaseNo.Length != 4))
                 throw new ValidationFailedException("Invalid Case Number.");
 
             if (string.IsNullOrEmpty(request.CaseNo) || request.CaseNo.Length == 4)
@@ -158,7 +157,7 @@ namespace ChawlaClinic.BL.Services
         {
             var firstVisit = DateTime.Now;
 
-            string caseNo = await GenerateCaseNo(PatientType.Burns, firstVisit, null);
+            string caseNo = await GenerateCaseNo('B', firstVisit, null);
 
             var defaultDiscount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == 1 || x.Title == "None");
 
@@ -171,8 +170,8 @@ namespace ChawlaClinic.BL.Services
                 GuardianName = request.GuardianName,
                 AgeYears = request.AgeYears,
                 AgeMonths = request.AgeMonths,
-                Gender = ((char)request.Gender).ToString(),
-                Type = ((char)PatientType.Burns).ToString(),
+                Gender = request.Gender.ToString(),
+                Type = 'B'.ToString(),
                 Disease = null,
                 Address = null,
                 PhoneNumber = null,
@@ -195,7 +194,7 @@ namespace ChawlaClinic.BL.Services
             patient.GuardianName = request.GuardianName;
             patient.AgeYears = request.AgeYears;
             patient.AgeMonths = request.AgeMonths;
-            patient.Gender = ((char)request.Gender).ToString();
+            patient.Gender = request.Gender.ToString();
             patient.Disease = request.Disease;
             patient.Address = request.Address;
             patient.PhoneNumber = request.PhoneNumber;
@@ -215,30 +214,34 @@ namespace ChawlaClinic.BL.Services
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        private async Task<string> GenerateCaseNo(PatientType type, DateTime firstVisit, string? caseNo)
+        private async Task<string> GenerateCaseNo(char type, DateTime firstVisit, string? caseNo)
         {
-            var newCaseNo = firstVisit.Year.ToString().Substring(2) + ((char)type) + '-';
+            var newCaseNo = firstVisit.Year.ToString().Substring(2) + type + '-';
 
             if (string.IsNullOrEmpty(caseNo))
             {
-                var caseNoMax = await _dbContext.Patients
+                throw new NotImplementedException("The code is returning 4 digits case no after '24B-' instead of 6");
+                var caseNoMax = (await _dbContext.Patients
                     .Where(x => x.CaseNo.StartsWith(newCaseNo))
+                    .ToListAsync())
                     .Select(x => int.Parse(x.CaseNo.Substring(x.CaseNo.Length - 6)))
-                    .MaxAsync();
+                    .Max();
 
                 newCaseNo += (caseNoMax + 1).ToString();
             }
             else if (caseNo.Length == 4)
             {
-                var caseNoMax = await _dbContext.Patients
+                var caseNoNext = _dbContext.Patients
                     .Where(x => x.CaseNo.StartsWith(newCaseNo) && x.CaseNo.EndsWith(caseNo))
-                    .Select(x => int.Parse(x.CaseNo.Substring(x.CaseNo.Length - 6, 2)))
-                    .MaxAsync();
+                    .Select(x => int.Parse(x.CaseNo.Substring(x.CaseNo.Length - 6, 2)) + 1)
+                    .AsEnumerable()
+                    .DefaultIfEmpty(0)
+                    .Max();
 
-                if (caseNoMax == 99)
+                if (caseNoNext == 99)
                     throw new BadRequestException("Already maximum number of case numbers exists for the last 4 digits of token number provided.");
 
-                newCaseNo = newCaseNo + (caseNoMax + 1).ToString("D2") + caseNo;
+                newCaseNo = newCaseNo + caseNoNext.ToString("D2") + caseNo;
             }
 
             return newCaseNo;
