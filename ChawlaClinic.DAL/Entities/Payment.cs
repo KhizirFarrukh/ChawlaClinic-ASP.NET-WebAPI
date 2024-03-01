@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ChawlaClinic.DAL.Entities;
+﻿namespace ChawlaClinic.DAL.Entities;
 
 public partial class Payment
 {
     public int PaymentId { get; set; }
+
+    public string Code { get; set; } = null!;
 
     public int AmountPaid { get; set; }
 

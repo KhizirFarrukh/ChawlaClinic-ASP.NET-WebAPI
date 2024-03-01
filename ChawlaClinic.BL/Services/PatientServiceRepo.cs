@@ -132,8 +132,14 @@ namespace ChawlaClinic.BL.Services
             if (string.IsNullOrEmpty(request.CaseNo) || request.CaseNo.Length == 4)
                 request.CaseNo = await GenerateCaseNo(request.Type, firstVisit, request.CaseNo);
 
+            var defaultDiscount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == 1 || x.Title == "None");
+
+#error get payment id from sequence
+            var patientId = 0; 
+
             await _dbContext.Patients.AddAsync(new Patient
             {
+                PatientId = patientId,
                 Name = request.Name,
                 GuardianName = request.GuardianName,
                 AgeYears = request.AgeYears,
@@ -146,6 +152,8 @@ namespace ChawlaClinic.BL.Services
                 CaseNo = request.CaseNo,
                 FirstVisit = firstVisit,
                 Status = PatientStatus.Active.ToString(),
+                Description = null,
+                DiscountId = defaultDiscount.DiscountId
             });
 
             return await _dbContext.SaveChangesAsync() > 0;
@@ -157,6 +165,11 @@ namespace ChawlaClinic.BL.Services
 
             string caseNo = await GenerateCaseNo(PatientType.Burns, firstVisit, null);
 
+            var defaultDiscount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == 1 || x.Title == "None");
+
+#error get payment id from sequence
+            var patientId = 0;
+            
             await _dbContext.Patients.AddAsync(new Patient
             {
                 Name = request.Name,
@@ -171,6 +184,7 @@ namespace ChawlaClinic.BL.Services
                 CaseNo = caseNo,
                 FirstVisit = firstVisit,
                 Status = PatientStatus.Active.ToString(),
+                DiscountId = defaultDiscount.DiscountId,
             });
 
             return await _dbContext.SaveChangesAsync() > 0;

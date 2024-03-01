@@ -26,20 +26,17 @@ namespace ChawlaClinic.BL.Services
             if (patient == null)
                 throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
 
-            //var discount = await _dbContext.DiscountOptions.Where(x => x.DiscountId == request.DiscountId).FirstOrDefaultAsync();
-
-            //if (discount == null)
-            //    throw new NotFoundException($"Discount with ID {request.DiscountId} was not found.");
+#error get payment id from sequence
+            var paymentId = 0; 
 
             var payment = new Payment
             {
                 AmountPaid = request.AmountPaid,
+                Code = CommonHelper.GenerateSecureCode(paymentId),
                 DateTime = request.DateTime ?? DateTime.Now,
                 PatientId = patient.PatientId,
-                DiscountId = patient.DiscountId
+                DiscountId = patient.DiscountId,
             };
-
-            payment.SecureToken = CommonHelper.GenerateSecureToken(payment.TokenID);
 
             await _dbContext.Payments.AddAsync(payment);
 
@@ -63,6 +60,7 @@ namespace ChawlaClinic.BL.Services
                 .Select(x => new GetPaymentResponse
                 {
                     PaymentId = x.PaymentId,
+                    Code = x.Code,
                     AmountPaid = x.AmountPaid,
                     DateTime = x.DateTime,
                     Discount = new DiscountResponse
@@ -87,6 +85,27 @@ namespace ChawlaClinic.BL.Services
                 .Select(x => new GetPaymentResponse
                 {
                     PaymentId = x.PaymentId,
+                    Code = x.Code,
+                    AmountPaid = x.AmountPaid,
+                    DateTime = x.DateTime,
+                    Discount = new DiscountResponse
+                    {
+                        DiscountId = x.Discount.DiscountId,
+                        Title = x.Discount.Title
+                    }
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<GetPaymentResponse?> GetPaymentByPaymentCode(string paymentCode)
+        {
+            return await _dbContext.Payments
+                .Include(x => x.Discount)
+                .Where(x => x.Code == paymentCode)
+                .Select(x => new GetPaymentResponse
+                {
+                    PaymentId = x.PaymentId,
+                    Code = x.Code,
                     AmountPaid = x.AmountPaid,
                     DateTime = x.DateTime,
                     Discount = new DiscountResponse
