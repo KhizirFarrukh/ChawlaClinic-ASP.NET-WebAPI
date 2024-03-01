@@ -54,6 +54,9 @@ namespace ChawlaClinic.BL.Services
                             Title = x.Discount.Title
                         }
                 })
+                .OrderBy($"{request.SortColumn} {sorting}")
+                .Skip(request.Page * request.Size)
+                .Take(request.Size)
                 .ToListAsync();
 
             return patients;
@@ -110,6 +113,7 @@ namespace ChawlaClinic.BL.Services
                     PatientId = x.PatientId,
                     Name = x.Name,
                     CaseNo = x.CaseNo,
+                    PhoneNumber = x.PhoneNumber,
                     Status = (PatientStatus)Enum.Parse(typeof(PatientStatus), x.Status),
                     FirstVisit = x.FirstVisit
                 })

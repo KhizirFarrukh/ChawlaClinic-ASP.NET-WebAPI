@@ -7,7 +7,7 @@ namespace ChawlaClinic.Common.Requests.Patient
         public int PatientId { get; set; }
         public string Name { get; set; } = null!;
         public string CaseNo { get; set; } = null!;
-        public string MobileNumber { get; set; } = null!;
+        public string? PhoneNumber { get; set; } = null!;
         public PatientStatus Status { get; set; }
         public DateOnly FirstVisit { get; set; }
     }
