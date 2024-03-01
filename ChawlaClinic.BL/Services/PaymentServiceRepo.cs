@@ -11,13 +11,10 @@ using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
 {
-    public class PaymentServiceRepo : IPaymentServiceRepo
+    public class PaymentServiceRepo : BaseServiceRepo<Payment>, IPaymentServiceRepo
     {
-        private ApplicationDbContext _dbContext;
-        public PaymentServiceRepo(ApplicationDbContext context)
-        {
-            _dbContext = context;
-        }
+        public PaymentServiceRepo(ApplicationDbContext dbContext) : base(dbContext)
+        { }
 
         public async Task<bool> AddPayment(CreatePaymentRequest request)
         {
@@ -26,11 +23,11 @@ namespace ChawlaClinic.BL.Services
             if (patient == null)
                 throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
 
-#error get payment id from sequence
-            var paymentId = 0; 
+            var paymentId = await GetSequence(); 
 
             var payment = new Payment
             {
+                PaymentId = paymentId,
                 AmountPaid = request.AmountPaid,
                 Code = CommonHelper.GenerateSecureCode(paymentId),
                 DateTime = request.DateTime ?? DateTime.Now,

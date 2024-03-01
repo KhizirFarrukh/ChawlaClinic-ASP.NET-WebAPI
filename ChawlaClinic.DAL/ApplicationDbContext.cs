@@ -22,6 +22,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<Payment> Payments { get; set; }
 
+    public virtual DbSet<Sequence> Sequences { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseMySQL("Server=localhost;Database=chawlaclinic;User ID=root;Password=root;");
@@ -69,6 +71,7 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnName("first_visit");
             entity.Property(e => e.Gender)
                 .HasMaxLength(1)
+                .IsFixedLength()
                 .HasColumnName("gender");
             entity.Property(e => e.GuardianName)
                 .HasMaxLength(256)
@@ -80,8 +83,8 @@ public partial class ApplicationDbContext : DbContext
                 .HasMaxLength(11)
                 .HasColumnName("phone_number");
             entity.Property(e => e.Status)
-                .HasMaxLength(6)
-                .HasDefaultValueSql("'ACTIVE'")
+                .HasMaxLength(16)
+                .HasDefaultValueSql("'Active'")
                 .HasColumnName("status");
             entity.Property(e => e.Type)
                 .HasMaxLength(1)
@@ -89,7 +92,7 @@ public partial class ApplicationDbContext : DbContext
                 .IsFixedLength()
                 .HasColumnName("type");
 
-            entity.HasOne(d => d.Discount).WithMany(x => x.Patients)
+            entity.HasOne(d => d.Discount).WithMany(p => p.Patients)
                 .HasForeignKey(d => d.DiscountId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_patient_discount");
@@ -107,6 +110,9 @@ public partial class ApplicationDbContext : DbContext
 
             entity.Property(e => e.PaymentId).HasColumnName("payment_id");
             entity.Property(e => e.AmountPaid).HasColumnName("amount_paid");
+            entity.Property(e => e.Code)
+                .HasMaxLength(16)
+                .HasColumnName("code");
             entity.Property(e => e.DateTime)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime")
@@ -114,14 +120,29 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.DiscountId).HasColumnName("discount_id");
             entity.Property(e => e.PatientId).HasColumnName("patient_id");
 
-            entity.HasOne(d => d.Discount).WithMany(x => x.Payments)
+            entity.HasOne(d => d.Discount).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.DiscountId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_payment_discount");
 
-            entity.HasOne(d => d.Patient).WithMany(x => x.Payments)
+            entity.HasOne(d => d.Patient).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.PatientId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_payment_patient");
+        });
+
+        modelBuilder.Entity<Sequence>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("sequence");
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(128)
+                .HasColumnName("name");
+            entity.Property(e => e.NextValue)
+                .HasDefaultValueSql("'1'")
+                .HasColumnName("next_value");
         });
 
         OnModelCreatingPartial(modelBuilder);

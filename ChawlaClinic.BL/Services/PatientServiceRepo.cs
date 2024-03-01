@@ -12,14 +12,10 @@ using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
 {
-    public class PatientServiceRepo : IPatientServiceRepo
+    public class PatientServiceRepo : BaseServiceRepo<Patient>, IPatientServiceRepo
     {
-        ApplicationDbContext _dbContext;
-
-        public PatientServiceRepo(ApplicationDbContext context)
-        {
-            _dbContext = context;
-        }
+        public PatientServiceRepo(ApplicationDbContext dbContext) :base(dbContext)
+        { }
 
         public async Task<List<PatientResponse>?> GetPatients(PagedRequest request)
         {
@@ -123,7 +119,7 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<bool> AddPatient(CreatePatientRequest request)
         {
-            var firstVisit = request.FirstVisit ?? DateOnly.FromDateTime(DateTime.Now);
+            var firstVisit = request.FirstVisit ?? DateTime.Now;
 
             if ((request.CaseNo.Length == 4 && !int.TryParse(request.CaseNo, out _)) ||
                 (!string.IsNullOrEmpty(request.CaseNo) && request.CaseNo.Length != 6))
@@ -134,8 +130,7 @@ namespace ChawlaClinic.BL.Services
 
             var defaultDiscount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == 1 || x.Title == "None");
 
-#error get payment id from sequence
-            var patientId = 0; 
+            var patientId = await GetSequence(); 
 
             await _dbContext.Patients.AddAsync(new Patient
             {
@@ -161,17 +156,17 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<bool> AddPatient(CreateEmergencyBurnPatientRequest request)
         {
-            var firstVisit = DateOnly.FromDateTime(DateTime.Now);
+            var firstVisit = DateTime.Now;
 
             string caseNo = await GenerateCaseNo(PatientType.Burns, firstVisit, null);
 
             var defaultDiscount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == 1 || x.Title == "None");
 
-#error get payment id from sequence
-            var patientId = 0;
-            
+            var patientId = await GetSequence();
+
             await _dbContext.Patients.AddAsync(new Patient
             {
+                PatientId = patientId,
                 Name = request.Name,
                 GuardianName = request.GuardianName,
                 AgeYears = request.AgeYears,
@@ -220,7 +215,7 @@ namespace ChawlaClinic.BL.Services
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        private async Task<string> GenerateCaseNo(PatientType type, DateOnly firstVisit, string? caseNo)
+        private async Task<string> GenerateCaseNo(PatientType type, DateTime firstVisit, string? caseNo)
         {
             var newCaseNo = firstVisit.Year.ToString().Substring(2) + ((char)type) + '-';
 

@@ -1,7 +1,6 @@
-﻿using ChawlaClinic.API.Models;
+﻿using ChawlaClinic.BL.ServiceInterfaces;
+using ChawlaClinic.Common.Exceptions;
 using ChawlaClinic.Common.Requests.Payment;
-using ChawlaClinic.BL.ServiceInterfaces;
-using ChawlaClinic.Common.Commons;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChawlaClinic.API.Controllers
@@ -15,72 +14,79 @@ namespace ChawlaClinic.API.Controllers
         }
 
         [HttpGet("GetPayments")]
-        public IActionResult GetPayments(string patientId)
+        public async Task<IActionResult> GetPayments(GetPaymentsByPatientIdRequest request)
         {
             try
             {
-                var payments = _paymentRepo.GetPayments(patientId);
-
-                bool result = false;
-                string msg = string.Format(CustomMessage.NOT_FOUND, "Patient");
-
-                if (payments != null)
-                {
-                    result = true;
-                    msg = "";
-                }
-
-                return Ok(new JSONResponse { Status = result, Message = msg, Data = payments });
+                return Ok(await _paymentRepo.GetPaymentsByPatientId(request));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
             }
         }
 
-        [HttpGet("GetPaymentById")]
-        public IActionResult GetPaymentById(string paymentId)
+        [HttpGet("GetPaymentByPaymentId")]
+        public async Task<IActionResult> GetPaymentByPaymentId(int paymentId)
         {
             try
             {
-                var payment = _paymentRepo.GetPaymentById(paymentId);
-
-                bool result = false;
-                string msg = string.Format(CustomMessage.NOT_FOUND, "Payment");
-
-                if (payment != null)
-                {
-                    result = true;
-                    msg = "";
-                }
-
-                return Ok(new JSONResponse { Status = result, Message = msg, Data = payment });
+                return Ok(await _paymentRepo.GetPaymentByPaymentId(paymentId));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
             }
         }
 
         [HttpPost("AddPayment")]
-        public IActionResult AddPayment(CreatePaymentRequest dto)
+        public async Task<IActionResult> AddPayment(CreatePaymentRequest request)
         {
             try
             {
-                bool result = _paymentRepo.AddPayment(dto);
+                bool result = await _paymentRepo.AddPayment(request);
 
-                string msg = string.Format(CustomMessage.NOT_FOUND, "Patient");
-
-                if(result)
-                {
-                    msg = string.Format(CustomMessage.ADDED_SUCCESSFULLY, "Payment");
-                }
-
-                return Ok(new JSONResponse { Status = result, Message = msg });
+                return Ok(result);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
             }
         }
     }

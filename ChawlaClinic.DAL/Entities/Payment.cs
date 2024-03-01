@@ -1,4 +1,7 @@
-﻿namespace ChawlaClinic.DAL.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace ChawlaClinic.DAL.Entities;
 
 public partial class Payment
 {

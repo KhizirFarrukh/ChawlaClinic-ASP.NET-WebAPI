@@ -29,7 +29,7 @@ public partial class Patient
 
     public string Status { get; set; } = null!;
 
-    public DateOnly FirstVisit { get; set; }
+    public DateTime FirstVisit { get; set; }
 
     public int DiscountId { get; set; }
 

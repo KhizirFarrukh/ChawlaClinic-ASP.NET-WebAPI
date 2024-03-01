@@ -16,7 +16,7 @@ namespace ChawlaClinic.Common.Requests.Patient
         public string Address { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
         public PatientStatus Status { get; set; }
-        public DateOnly FirstVisit { get; set; }
+        public DateTime FirstVisit { get; set; }
         public int DiscountId { get; set; }
     }
 }

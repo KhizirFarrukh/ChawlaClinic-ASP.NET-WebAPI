@@ -20,10 +20,10 @@ CREATE TABLE IF NOT EXISTS patient
   age_months int NOT NULL DEFAULT 0,
   gender char(1) NOT NULL,
   guardian_name varchar(256) NOT NULL,
-  disease varchar(512) NOT NULL,
+  disease varchar(512) DEFAULT NULL,
   address varchar(128) DEFAULT NULL,
   phone_number varchar(11) DEFAULT NULL,
-  status varchar(6) NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Closed', 'Suspended', 'Aborted')),
+  status varchar(16) NOT NULL DEFAULT 'Active' CHECK (status IN ('Active', 'Closed', 'Suspended', 'Aborted')),
   first_visit date NOT NULL,
   discount_id int NOT NULL,
   description varchar(1024) DEFAULT NULL,
@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS patient
 CREATE TABLE IF NOT EXISTS payment
 (
   payment_id int NOT NULL,
-  amount int NOT NULL,
+  code varchar(16) NOT NULL,
+  amount_paid int NOT NULL,
   date_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   patient_id int NOT NULL,
   discount_id int NOT NULL,
@@ -42,3 +43,17 @@ CREATE TABLE IF NOT EXISTS payment
   CONSTRAINT fk_payment_patient FOREIGN KEY (patient_id) REFERENCES patient(patient_id),
   CONSTRAINT fk_payment_discount FOREIGN KEY (discount_id) REFERENCES discount_option(discount_id)
 );
+
+----------------------------------------------
+-------------- SEQUENCE ----------------------
+----------------------------------------------
+
+CREATE TABLE IF NOT EXISTS sequence
+(
+	name varchar(128) NOT NULL,
+  next_value INT UNSIGNED NOT NULL DEFAULT 1
+);
+
+INSERT INTO sequence(name) VALUES('discount_option');
+INSERT INTO sequence(name) VALUES('patient');
+INSERT INTO sequence(name) VALUES('payment');
