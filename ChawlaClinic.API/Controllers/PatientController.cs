@@ -15,11 +15,11 @@ namespace ChawlaClinic.API.Controllers
         }
 
         [HttpGet("GetPatients")]
-        public async Task<IActionResult> GetPatients([FromQuery] PagedRequest request)
+        public async Task<IActionResult> GetPatients([FromQuery] int? size, int? page, bool? isAscending, string? sortColumn)
         {
             try
             {
-                return Ok(await _patientRepo.GetPatients(request));
+                return Ok(await _patientRepo.GetPatients(new PagedRequest(size: size, page: page, isAscending: isAscending, sortColumn: sortColumn ?? "CaseNo")));
             }
             catch (NotFoundException ex)
             {
