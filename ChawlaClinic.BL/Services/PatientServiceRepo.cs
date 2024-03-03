@@ -22,6 +22,7 @@ namespace ChawlaClinic.BL.Services
             var sorting = request.GetSortingString();
 
             var patients = await _dbContext.Patients
+                .AsNoTracking()
                 .Include(x => x.Discount)
                 .Select(x => new PatientResponse
                 {
@@ -37,7 +38,7 @@ namespace ChawlaClinic.BL.Services
                     Address = x.Address,
                     PhoneNumber = x.PhoneNumber,
                     CaseNo = x.CaseNo,
-                    Status = (PatientStatus)Enum.Parse(typeof(PatientStatus), x.Status),
+                    Status = x.Status,
                     FirstVisit = x.FirstVisit,
                     Discount = x.Discount == null ? null :
                         new DiscountResponse
@@ -47,7 +48,7 @@ namespace ChawlaClinic.BL.Services
                         }
                 })
                 .OrderBy($"{request.SortColumn} {sorting}")
-                .Skip(request.Page * request.Size)
+                .Skip((request.Page - 1) * request.Size)
                 .Take(request.Size)
                 .ToListAsync();
 
@@ -73,7 +74,7 @@ namespace ChawlaClinic.BL.Services
                     Address = x.Address,
                     PhoneNumber = x.PhoneNumber,
                     CaseNo = x.CaseNo,
-                    Status = (PatientStatus)Enum.Parse(typeof(PatientStatus), x.Status),
+                    Status = x.Status,
                     FirstVisit = x.FirstVisit,
                     Discount = x.Discount == null ? null :
                         new DiscountResponse
@@ -220,14 +221,16 @@ namespace ChawlaClinic.BL.Services
 
             if (string.IsNullOrEmpty(caseNo))
             {
-                throw new NotImplementedException("The code is returning 4 digits case no after '24B-' instead of 6");
-                var caseNoMax = (await _dbContext.Patients
+                var matchingCaseNos = await _dbContext.Patients
                     .Where(x => x.CaseNo.StartsWith(newCaseNo))
-                    .ToListAsync())
-                    .Select(x => int.Parse(x.CaseNo.Substring(x.CaseNo.Length - 6)))
+                    .Select(x => x.CaseNo.Substring(x.CaseNo.Length - 6))
+                    .ToListAsync();
+
+                var caseNoMax = matchingCaseNos
+                    .Select(x => int.Parse(x))
                     .Max();
 
-                newCaseNo += (caseNoMax + 1).ToString();
+                newCaseNo += (caseNoMax + 1).ToString().PadLeft(6, '0');
             }
             else if (caseNo.Length == 4)
             {
