@@ -34,6 +34,8 @@ namespace ChawlaClinic.BL.Services
                 var sequenceValue = (int)sequence.NextValue;
                 sequence.NextValue += 1;
 
+                _dbContext.Sequences.Update(sequence);
+
                 await _dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 

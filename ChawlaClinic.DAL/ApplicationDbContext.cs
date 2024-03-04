@@ -133,9 +133,9 @@ public partial class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<Sequence>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("sequence");
+            entity.HasKey(e => e.Name).HasName("PRIMARY");
+
+            entity.ToTable("sequence");
 
             entity.Property(e => e.Name)
                 .HasMaxLength(128)

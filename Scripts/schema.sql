@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS payment
 
 CREATE TABLE IF NOT EXISTS sequence
 (
-	name varchar(128) NOT NULL,
+	name varchar(128) NOT NULL PRIMARY KEY,
   next_value INT UNSIGNED NOT NULL DEFAULT 1
 );
 
