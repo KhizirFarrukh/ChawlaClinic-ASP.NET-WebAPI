@@ -5,6 +5,7 @@
         Active,
         Closed,
         Suspended,
-        Aborted
+        Aborted,
+        Deleted
     }
 }

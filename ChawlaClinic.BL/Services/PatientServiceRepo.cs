@@ -212,7 +212,9 @@ namespace ChawlaClinic.BL.Services
 
             if (patient == null) throw new NotFoundException($"Patient with ID {patientId} was not found.");
 
-            _dbContext.Patients.Remove(patient);
+            patient.Status = PatientStatus.Deleted.ToString(); // add this new status to check condition in tables
+
+            _dbContext.Patients.Update(patient);
 
             return await _dbContext.SaveChangesAsync() > 0;
         }
