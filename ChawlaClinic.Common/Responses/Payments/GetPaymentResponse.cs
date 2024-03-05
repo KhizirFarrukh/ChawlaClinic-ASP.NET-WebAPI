@@ -8,6 +8,7 @@ namespace ChawlaClinic.Common.Responses.Payments
         public string Code { get; set; } = null!;
         public int AmountPaid { get; set; }
         public DateTime DateTime { get; set; }
+        public string Status { get; set; } = null!;
         public DiscountResponse Discount { get; set; } = null!;
     }
 }

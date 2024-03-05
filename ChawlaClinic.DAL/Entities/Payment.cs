@@ -17,6 +17,8 @@ public partial class Payment
 
     public int DiscountId { get; set; }
 
+    public string Status { get; set; } = null!;
+
     public virtual DiscountOption Discount { get; set; } = null!;
 
     public virtual Patient Patient { get; set; } = null!;

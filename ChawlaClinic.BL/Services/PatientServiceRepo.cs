@@ -8,6 +8,7 @@ using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
@@ -24,6 +25,7 @@ namespace ChawlaClinic.BL.Services
             var patients = await _dbContext.Patients
                 .AsNoTracking()
                 .Include(x => x.Discount)
+                .Where(x => x.Status != PatientStatus.Deleted.ToString())
                 .Select(x => new PatientResponse
                 {
                     PatientId = x.PatientId,
@@ -55,11 +57,11 @@ namespace ChawlaClinic.BL.Services
             return patients;
         }
 
-        public async Task<PatientResponse?> GetPatientById(int PatientId)
+        public async Task<PatientResponse?> GetPatientById(int patientId)
         {
             var patient = await _dbContext.Patients
                 .Include(x => x.Discount)
-                .Where(x => x.PatientId == PatientId)
+                .Where(x => x.PatientId == patientId)
                 .Select(x => new PatientResponse
                 {
                     PatientId = x.PatientId,
@@ -85,6 +87,9 @@ namespace ChawlaClinic.BL.Services
                 })
                 .FirstOrDefaultAsync();
 
+            if (patient != null && patient.Status == PatientStatus.Deleted.ToString())
+                throw new BadRequestException($"Patient with ID {patientId} is deleted.");
+
             return patient;
         }
 
@@ -94,6 +99,7 @@ namespace ChawlaClinic.BL.Services
 
             var patients = await _dbContext.Patients
                 .Where(x =>
+                    x.Status != PatientStatus.Deleted.ToString() &&
                     (x.Name.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase) ||
                     (x.PhoneNumber != null && x.PhoneNumber.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase)) ||
                      x.CaseNo.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase)) &&
@@ -189,6 +195,9 @@ namespace ChawlaClinic.BL.Services
         {
             var patient = await _dbContext.Patients.Where(x => x.PatientId == request.PatientId).FirstOrDefaultAsync() 
                 ?? throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
+
+            if(patient.Status == PatientStatus.Deleted.ToString())
+                throw new BadRequestException($"Patient with ID {request.PatientId} is deleted.");
 
             patient.Name = request.Name;
             patient.GuardianName = request.GuardianName;

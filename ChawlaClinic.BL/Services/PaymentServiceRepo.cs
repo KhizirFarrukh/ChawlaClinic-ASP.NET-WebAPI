@@ -1,4 +1,5 @@
 ﻿using ChawlaClinic.BL.ServiceInterfaces;
+using ChawlaClinic.Common.Enums;
 using ChawlaClinic.Common.Exceptions;
 using ChawlaClinic.Common.Helpers;
 using ChawlaClinic.Common.Requests.Payment;
@@ -23,7 +24,7 @@ namespace ChawlaClinic.BL.Services
             if (patient == null)
                 throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
 
-            var paymentId = await GetSequence(); 
+            var paymentId = await GetSequence();
 
             var payment = new Payment
             {
@@ -49,17 +50,22 @@ namespace ChawlaClinic.BL.Services
             if (patient == null)
                 throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
 
+            if (patient.Status == PatientStatus.Deleted.ToString())
+                throw new BadRequestException($"Patient with ID {request.PatientId} is deleted.");
+
             var sorting = request.GetSortingString();
 
             var payments = await _dbContext.Payments
                 .Include(x => x.Discount)
-                .Where(x => x.PatientId == patient.PatientId)
+                .Where(x => x.PatientId == patient.PatientId &&
+                    x.Status != PaymentStatus.Deleted.ToString())
                 .Select(x => new GetPaymentResponse
                 {
                     PaymentId = x.PaymentId,
                     Code = x.Code,
                     AmountPaid = x.AmountPaid,
                     DateTime = x.DateTime,
+                    Status = x.Status,
                     Discount = new DiscountResponse
                     {
                         DiscountId = x.Discount.DiscountId,
@@ -76,7 +82,7 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<GetPaymentResponse?> GetPaymentByPaymentId(int paymentId)
         {
-            return await _dbContext.Payments
+            var payment = await _dbContext.Payments
                 .Include(x => x.Discount)
                 .Where(x => x.PaymentId == paymentId)
                 .Select(x => new GetPaymentResponse
@@ -85,6 +91,7 @@ namespace ChawlaClinic.BL.Services
                     Code = x.Code,
                     AmountPaid = x.AmountPaid,
                     DateTime = x.DateTime,
+                    Status = x.Status,
                     Discount = new DiscountResponse
                     {
                         DiscountId = x.Discount.DiscountId,
@@ -92,11 +99,16 @@ namespace ChawlaClinic.BL.Services
                     }
                 })
                 .FirstOrDefaultAsync();
+
+            if (payment != null && payment.Status == PaymentStatus.Deleted.ToString())
+                throw new BadRequestException($"Payment with ID {paymentId} is deleted.");
+
+            return payment;
         }
 
         public async Task<GetPaymentResponse?> GetPaymentByPaymentCode(string paymentCode)
         {
-            return await _dbContext.Payments
+            var payment = await _dbContext.Payments
                 .Include(x => x.Discount)
                 .Where(x => x.Code == paymentCode)
                 .Select(x => new GetPaymentResponse
@@ -105,6 +117,7 @@ namespace ChawlaClinic.BL.Services
                     Code = x.Code,
                     AmountPaid = x.AmountPaid,
                     DateTime = x.DateTime,
+                    Status = x.Status,
                     Discount = new DiscountResponse
                     {
                         DiscountId = x.Discount.DiscountId,
@@ -112,6 +125,11 @@ namespace ChawlaClinic.BL.Services
                     }
                 })
                 .FirstOrDefaultAsync();
+
+            if (payment != null && payment.Status == PaymentStatus.Deleted.ToString())
+                throw new BadRequestException($"Payment with code {paymentCode} is deleted.");
+
+            return payment;
         }
 
         public async Task<bool> UpdatePayment(UpdatePaymentRequest request)
@@ -123,8 +141,11 @@ namespace ChawlaClinic.BL.Services
 
             var payment = await _dbContext.Payments.Where(x => x.PaymentId == request.PaymentId).FirstOrDefaultAsync();
 
-            if (payment == null) 
+            if (payment == null)
                 throw new NotFoundException($"Payment with ID {request.PaymentId} was not found.");
+
+            if (payment.Status == PaymentStatus.Deleted.ToString())
+                throw new BadRequestException($"Payment with ID {request.PaymentId} is deleted.");
 
             payment.AmountPaid = request.AmountPaid;
             payment.DateTime = request.DateTime;
@@ -138,10 +159,12 @@ namespace ChawlaClinic.BL.Services
         {
             var payment = await _dbContext.Payments.Where(x => x.PaymentId == paymentId).FirstOrDefaultAsync();
 
-            if (payment == null) 
+            if (payment == null)
                 throw new NotFoundException($"Payment with ID {paymentId} was not found.");
 
-            _dbContext.Payments.Remove(payment);
+            payment.Status = PaymentStatus.Deleted.ToString();
+
+            _dbContext.Payments.Update(payment);
 
             return await _dbContext.SaveChangesAsync() > 0;
         }

@@ -119,6 +119,10 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnName("date_time");
             entity.Property(e => e.DiscountId).HasColumnName("discount_id");
             entity.Property(e => e.PatientId).HasColumnName("patient_id");
+            entity.Property(e => e.Status)
+                .HasMaxLength(16)
+                .HasDefaultValueSql("'Paid'")
+                .HasColumnName("status");
 
             entity.HasOne(d => d.Discount).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.DiscountId)
