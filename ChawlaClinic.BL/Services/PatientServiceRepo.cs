@@ -187,9 +187,8 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<bool> UpdatePatient(UpdatePatientRequest request)
         {
-            var patient = await _dbContext.Patients.Where(x => x.PatientId == request.PatientId).FirstOrDefaultAsync();
-
-            if (patient == null) throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
+            var patient = await _dbContext.Patients.Where(x => x.PatientId == request.PatientId).FirstOrDefaultAsync() 
+                ?? throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
 
             patient.Name = request.Name;
             patient.GuardianName = request.GuardianName;
@@ -200,6 +199,9 @@ namespace ChawlaClinic.BL.Services
             patient.Address = request.Address;
             patient.PhoneNumber = request.PhoneNumber;
             patient.FirstVisit = request.FirstVisit;
+            patient.Status = request.Status;
+            patient.DiscountId = request.DiscountId;
+            patient.Discount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == request.DiscountId);
 
             return await _dbContext.SaveChangesAsync() > 0;
         }

@@ -139,5 +139,30 @@ namespace ChawlaClinic.API.Controllers
             }
         }
 
+        [HttpPut("UpdatePatient")]
+        public async Task<IActionResult> UpdatePatient([FromBody] UpdatePatientRequest request)
+        {
+            try
+            {
+                return Ok(await _patientRepo.UpdatePatient(request));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
+            }
+        }
+
     }
 }
