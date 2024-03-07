@@ -1,6 +1,4 @@
-﻿using ChawlaClinic.Common.Enums;
-
-namespace ChawlaClinic.Common.Responses.Patients
+﻿namespace ChawlaClinic.Common.Responses.Patients
 {
     public class PatientSearchResponse
     {
@@ -8,7 +6,7 @@ namespace ChawlaClinic.Common.Responses.Patients
         public string Name { get; set; } = null!;
         public string CaseNo { get; set; } = null!;
         public string? PhoneNumber { get; set; } = null!;
-        public PatientStatus Status { get; set; }
+        public string Status { get; set; } = null!;
         public DateTime FirstVisit { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using ChawlaClinic.Common.Enums;
 using ChawlaClinic.Common.Exceptions;
 using ChawlaClinic.Common.Requests.Commons;
 using ChawlaClinic.Common.Requests.Patient;
+using ChawlaClinic.Common.Responses.Commons;
 using ChawlaClinic.Common.Responses.Discounts;
 using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.DAL;
@@ -93,11 +94,11 @@ namespace ChawlaClinic.BL.Services
             return patient;
         }
 
-        public async Task<List<PatientSearchResponse>?> SearchPatient(SearchPatientRequest request)
+        public async Task<PaginatedList<PatientSearchResponse>> SearchPatient(SearchPatientRequest request)
         {
             var sorting = request.GetSortingString();
 
-            var patients = await _dbContext.Patients
+            var query = _dbContext.Patients
                 .Where(x =>
                     x.Status != PatientStatus.Deleted.ToString() &&
                     (x.Name.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase) ||
@@ -106,14 +107,18 @@ namespace ChawlaClinic.BL.Services
                     (request.Type == null || x.Type == ((char)request.Type).ToString()) &&
                     (request.FirstVisitStart == null || x.FirstVisit >= request.FirstVisitStart) &&
                     (request.FirstVisitEnd == null || x.FirstVisit <= request.FirstVisitEnd) &&
-                    (request.Status == null || x.Status == request.Status.ToString()))
+                    (request.Status == null || x.Status == request.Status.ToString()));
+
+            var totalCount = await query.CountAsync();
+
+            var patients = await query
                 .Select(x => new PatientSearchResponse
                 {
                     PatientId = x.PatientId,
                     Name = x.Name,
                     CaseNo = x.CaseNo,
                     PhoneNumber = x.PhoneNumber,
-                    Status = (PatientStatus)Enum.Parse(typeof(PatientStatus), x.Status),
+                    Status = x.Status,
                     FirstVisit = x.FirstVisit
                 })
                 .OrderBy($"{request.SortColumn} {sorting}")
@@ -121,7 +126,7 @@ namespace ChawlaClinic.BL.Services
                 .Take(request.Size)
                 .ToListAsync();
 
-            return patients;
+            return new PaginatedList<PatientSearchResponse>(patients, totalCount, request.Page, request.Size);
         }
 
         public async Task<bool> AddPatient(CreatePatientRequest request)
