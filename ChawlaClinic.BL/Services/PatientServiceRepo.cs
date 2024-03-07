@@ -9,24 +9,27 @@ using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
 {
     public class PatientServiceRepo : BaseServiceRepo<Patient>, IPatientServiceRepo
     {
-        public PatientServiceRepo(ApplicationDbContext dbContext) :base(dbContext)
+        public PatientServiceRepo(ApplicationDbContext dbContext) : base(dbContext)
         { }
 
-        public async Task<List<PatientResponse>?> GetPatients(PagedRequest request)
+        public async Task<PaginatedList<PatientResponse>> GetPatients(PagedRequest request)
         {
             var sorting = request.GetSortingString();
 
-            var patients = await _dbContext.Patients
+            var query = _dbContext.Patients
                 .AsNoTracking()
                 .Include(x => x.Discount)
-                .Where(x => x.Status != PatientStatus.Deleted.ToString())
+                .Where(x => x.Status != PatientStatus.Deleted.ToString());
+
+            var totalCount = await query.CountAsync();
+
+            var patients = await query
                 .Select(x => new PatientResponse
                 {
                     PatientId = x.PatientId,
@@ -55,7 +58,7 @@ namespace ChawlaClinic.BL.Services
                 .Take(request.Size)
                 .ToListAsync();
 
-            return patients;
+            return new PaginatedList<PatientResponse>(patients, totalCount, request.Page, request.Size);
         }
 
         public async Task<PatientResponse?> GetPatientById(int patientId)
@@ -141,7 +144,7 @@ namespace ChawlaClinic.BL.Services
 
             var defaultDiscount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == 1 || x.Title == "None");
 
-            var patientId = await GetSequence(); 
+            var patientId = await GetSequence();
 
             await _dbContext.Patients.AddAsync(new Patient
             {
@@ -198,10 +201,10 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<bool> UpdatePatient(UpdatePatientRequest request)
         {
-            var patient = await _dbContext.Patients.Where(x => x.PatientId == request.PatientId).FirstOrDefaultAsync() 
+            var patient = await _dbContext.Patients.Where(x => x.PatientId == request.PatientId).FirstOrDefaultAsync()
                 ?? throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
 
-            if(patient.Status == PatientStatus.Deleted.ToString())
+            if (patient.Status == PatientStatus.Deleted.ToString())
                 throw new BadRequestException($"Patient with ID {request.PatientId} is deleted.");
 
             patient.Name = request.Name;

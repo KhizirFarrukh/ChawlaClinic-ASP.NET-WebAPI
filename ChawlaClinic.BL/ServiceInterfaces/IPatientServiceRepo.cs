@@ -1,5 +1,6 @@
 ﻿using ChawlaClinic.Common.Requests.Commons;
 using ChawlaClinic.Common.Requests.Patient;
+using ChawlaClinic.Common.Responses.Commons;
 using ChawlaClinic.Common.Responses.Patients;
 
 namespace ChawlaClinic.BL.ServiceInterfaces
@@ -10,8 +11,8 @@ namespace ChawlaClinic.BL.ServiceInterfaces
         Task<bool> AddPatient(CreateEmergencyBurnPatientRequest request);
         Task<bool> DeletePatient(int patientId);
         Task<PatientResponse?> GetPatientById(int PatientId);
-        Task<List<PatientResponse>?> GetPatients(PagedRequest request);
-        Task<List<PatientSearchResponse>?> SearchPatient(SearchPatientRequest filters);
+        Task<PaginatedList<PatientResponse>> GetPatients(PagedRequest request);
+        Task<PaginatedList<PatientSearchResponse>> SearchPatient(SearchPatientRequest filters);
         Task<bool> UpdatePatient(UpdatePatientRequest request);
     }
 }
