@@ -11,6 +11,8 @@ namespace ChawlaClinic.Common.Requests.Patient
         public DateTime? FirstVisitStart { get; set; }
         public DateTime? FirstVisitEnd { get; set; }
 
+        public SearchPatientRequest() : base("CaseNo") { }
+
         public SearchPatientRequest(int? size, int? page, bool? isAscending, string? sortColumn) 
             : base(size, page, isAscending, sortColumn ?? "CaseNo")
         { }

@@ -7,6 +7,14 @@
         public bool IsAscending { get; set; }
         public string SortColumn { get; set; }
 
+        public PagedRequest(string sortColumn)
+        {
+            Size = 10;
+            Page = 1;
+            IsAscending = true;
+            SortColumn = sortColumn;
+        }
+
         public PagedRequest(int? size, int? page, bool? isAscending, string sortColumn)
         {
             Size = size ?? 10;

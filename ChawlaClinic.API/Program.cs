@@ -36,6 +36,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("MySQLCon")));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy",
+        x => x.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+});
 
 var app = builder.Build();
 
