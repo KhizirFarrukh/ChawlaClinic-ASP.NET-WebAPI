@@ -7,7 +7,7 @@ namespace ChawlaClinic.Common.Requests.Patient
     {
         public string SearchParam { get; set; } = null!;
         public char? Type { get; set; }
-        public PatientStatus? Status { get; set; }
+        public string? Status { get; set; }
         public DateTime? FirstVisitStart { get; set; }
         public DateTime? FirstVisitEnd { get; set; }
 

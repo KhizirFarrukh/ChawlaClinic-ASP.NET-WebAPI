@@ -105,12 +105,13 @@ namespace ChawlaClinic.BL.Services
                 .Where(x =>
                     x.Status != PatientStatus.Deleted.ToString() &&
                     (x.Name.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase) ||
+                    x.GuardianName.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase) ||
                     (x.PhoneNumber != null && x.PhoneNumber.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase)) ||
                      x.CaseNo.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase)) &&
                     (request.Type == null || x.Type == ((char)request.Type).ToString()) &&
                     (request.FirstVisitStart == null || x.FirstVisit >= request.FirstVisitStart) &&
                     (request.FirstVisitEnd == null || x.FirstVisit <= request.FirstVisitEnd) &&
-                    (request.Status == null || x.Status == request.Status.ToString()));
+                    (request.Status == null || x.Status == request.Status));
 
             var totalCount = await query.CountAsync();
 
@@ -119,6 +120,7 @@ namespace ChawlaClinic.BL.Services
                 {
                     PatientId = x.PatientId,
                     Name = x.Name,
+                    GuardianName = x.GuardianName,
                     CaseNo = x.CaseNo,
                     PhoneNumber = x.PhoneNumber,
                     Status = x.Status,
