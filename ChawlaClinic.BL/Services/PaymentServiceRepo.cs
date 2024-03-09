@@ -74,7 +74,7 @@ namespace ChawlaClinic.BL.Services
                     }
                 })
                 .OrderBy($"{request.SortColumn} {sorting}")
-                .Skip(request.Page * request.Size)
+                .Skip((request.Page - 1) * request.Size)
                 .Take(request.Size)
                 .ToListAsync();
 
