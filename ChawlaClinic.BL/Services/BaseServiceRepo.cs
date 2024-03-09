@@ -14,14 +14,9 @@ using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
 {
-    public class BaseServiceRepo<T> : IBaseServiceRepo<T>
+    public class BaseServiceRepo<T>(ApplicationDbContext context) : IBaseServiceRepo<T>
     {
-        protected ApplicationDbContext _dbContext;
-
-        public BaseServiceRepo(ApplicationDbContext context)
-        {
-            _dbContext = context;
-        }
+        protected ApplicationDbContext _dbContext = context;
 
         public async Task<int> GetSequence()
         {

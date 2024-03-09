@@ -7,6 +7,7 @@ namespace ChawlaClinic.API
     {
         public static void AddServiceScopes(IServiceCollection services)
         {
+            services.AddScoped(typeof(IBaseServiceRepo<>), typeof(BaseServiceRepo<>));
             services.AddScoped<IPatientServiceRepo, PatientServiceRepo>();
             services.AddScoped<IPaymentServiceRepo, PaymentServiceRepo>();
         }

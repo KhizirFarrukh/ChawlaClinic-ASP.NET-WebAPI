@@ -13,11 +13,8 @@ using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
 {
-    public class PatientServiceRepo : BaseServiceRepo<Patient>, IPatientServiceRepo
+    public class PatientServiceRepo(ApplicationDbContext dbContext) : BaseServiceRepo<Patient>(dbContext), IPatientServiceRepo
     {
-        public PatientServiceRepo(ApplicationDbContext dbContext) : base(dbContext)
-        { }
-
         public async Task<PaginatedList<PatientResponse>> GetPatients(PagedRequest request)
         {
             var sorting = request.GetSortingString();

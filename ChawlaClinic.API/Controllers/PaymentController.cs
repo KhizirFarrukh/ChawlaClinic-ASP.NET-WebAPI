@@ -63,6 +63,31 @@ namespace ChawlaClinic.API.Controllers
             }
         }
 
+        [HttpGet("GetPaymentsByPatientId")]
+        public async Task<IActionResult> GetPaymentsByPatientId(GetPaymentsByPatientIdRequest request)
+        {
+            try
+            {
+                return Ok(await _paymentRepo.GetPaymentsByPatientId(request));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
+            }
+        }
+
         [HttpPost("AddPayment")]
         public async Task<IActionResult> AddPayment([FromBody] CreatePaymentRequest request)
         {

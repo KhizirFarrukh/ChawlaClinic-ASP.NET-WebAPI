@@ -2,7 +2,7 @@
 
 namespace ChawlaClinic.Common.Responses.Payments
 {
-    public class GetPaymentResponse
+    public class PaymentResponse
     {
         public int PaymentId { get; set; }
         public string Code { get; set; } = null!;

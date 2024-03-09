@@ -3,7 +3,9 @@ using ChawlaClinic.Common.Enums;
 using ChawlaClinic.Common.Exceptions;
 using ChawlaClinic.Common.Helpers;
 using ChawlaClinic.Common.Requests.Payment;
+using ChawlaClinic.Common.Responses.Commons;
 using ChawlaClinic.Common.Responses.Discounts;
+using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.Common.Responses.Payments;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
@@ -12,11 +14,8 @@ using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
 {
-    public class PaymentServiceRepo : BaseServiceRepo<Payment>, IPaymentServiceRepo
+    public class PaymentServiceRepo(ApplicationDbContext dbContext) : BaseServiceRepo<Payment>(dbContext), IPaymentServiceRepo
     {
-        public PaymentServiceRepo(ApplicationDbContext dbContext) : base(dbContext)
-        { }
-
         public async Task<bool> AddPayment(CreatePaymentRequest request)
         {
             var patient = await _dbContext.Patients.Where(x => x.PatientId == request.PatientId).FirstOrDefaultAsync();
@@ -41,11 +40,10 @@ namespace ChawlaClinic.BL.Services
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        public async Task<List<GetPaymentResponse>?> GetPaymentsByPatientId(GetPaymentsByPatientIdRequest request)
+        public async Task<PaginatedList<PaymentResponse>> GetPaymentsByPatientId(GetPaymentsByPatientIdRequest request)
         {
-            var patient = await _dbContext.Patients
-                .Where(x => x.PatientId == request.PatientId)
-                .FirstOrDefaultAsync();
+            var patient = _dbContext.Patients
+                .FirstOrDefault(x => x.PatientId == request.PatientId);
 
             if (patient == null)
                 throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
@@ -55,11 +53,15 @@ namespace ChawlaClinic.BL.Services
 
             var sorting = request.GetSortingString();
 
-            var payments = await _dbContext.Payments
+            var query = _dbContext.Payments
                 .Include(x => x.Discount)
                 .Where(x => x.PatientId == patient.PatientId &&
-                    x.Status != PaymentStatus.Deleted.ToString())
-                .Select(x => new GetPaymentResponse
+                    x.Status != PaymentStatus.Deleted.ToString());
+
+            var totalCount = await query.CountAsync();
+
+            var payments = await query
+                .Select(x => new PaymentResponse
                 {
                     PaymentId = x.PaymentId,
                     Code = x.Code,
@@ -77,15 +79,15 @@ namespace ChawlaClinic.BL.Services
                 .Take(request.Size)
                 .ToListAsync();
 
-            return payments;
+            return new PaginatedList<PaymentResponse>(payments, totalCount, request.Page, request.Size);
         }
 
-        public async Task<GetPaymentResponse?> GetPaymentByPaymentId(int paymentId)
+        public async Task<PaymentResponse?> GetPaymentByPaymentId(int paymentId)
         {
             var payment = await _dbContext.Payments
                 .Include(x => x.Discount)
                 .Where(x => x.PaymentId == paymentId)
-                .Select(x => new GetPaymentResponse
+                .Select(x => new PaymentResponse
                 {
                     PaymentId = x.PaymentId,
                     Code = x.Code,
@@ -106,12 +108,12 @@ namespace ChawlaClinic.BL.Services
             return payment;
         }
 
-        public async Task<GetPaymentResponse?> GetPaymentByPaymentCode(string paymentCode)
+        public async Task<PaymentResponse?> GetPaymentByPaymentCode(string paymentCode)
         {
             var payment = await _dbContext.Payments
                 .Include(x => x.Discount)
                 .Where(x => x.Code == paymentCode)
-                .Select(x => new GetPaymentResponse
+                .Select(x => new PaymentResponse
                 {
                     PaymentId = x.PaymentId,
                     Code = x.Code,
