@@ -208,6 +208,7 @@ namespace ChawlaClinic.BL.Services
 
             patient.Name = request.Name;
             patient.GuardianName = request.GuardianName;
+            patient.Description = request.Description;
             patient.AgeYears = request.AgeYears;
             patient.AgeMonths = request.AgeMonths;
             patient.Gender = request.Gender.ToString();

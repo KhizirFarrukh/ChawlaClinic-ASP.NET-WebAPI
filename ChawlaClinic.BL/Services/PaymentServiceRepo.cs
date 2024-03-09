@@ -5,11 +5,10 @@ using ChawlaClinic.Common.Helpers;
 using ChawlaClinic.Common.Requests.Payment;
 using ChawlaClinic.Common.Responses.Commons;
 using ChawlaClinic.Common.Responses.Discounts;
-using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.Common.Responses.Payments;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
@@ -42,8 +41,8 @@ namespace ChawlaClinic.BL.Services
 
         public async Task<PaginatedList<PaymentResponse>> GetPaymentsByPatientId(GetPaymentsByPatientIdRequest request)
         {
-            var patient = _dbContext.Patients
-                .FirstOrDefault(x => x.PatientId == request.PatientId);
+            var patient = await _dbContext.Patients
+                .FirstOrDefaultAsync(x => x.PatientId == request.PatientId);
 
             if (patient == null)
                 throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");

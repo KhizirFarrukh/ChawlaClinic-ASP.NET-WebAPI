@@ -1,10 +1,14 @@
-using ChawlaClinic.API;
+using ChawlaClinic.BL.ServiceInterfaces;
+using ChawlaClinic.BL.Services;
 using ChawlaClinic.DAL;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-ServiceExtensions.AddServiceScopes(builder.Services);
+builder.Services.AddScoped(typeof(IBaseServiceRepo<>), typeof(BaseServiceRepo<>));
+builder.Services.AddScoped<IPatientServiceRepo, PatientServiceRepo>();
+builder.Services.AddScoped<IPaymentServiceRepo, PaymentServiceRepo>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
