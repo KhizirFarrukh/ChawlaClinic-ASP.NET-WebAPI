@@ -1,342 +1,274 @@
-﻿using ChawlaClinic.BL.DTOs.Patient;
-using ChawlaClinic.BL.ServiceInterfaces;
-using ChawlaClinic.Common.Commons;
+﻿using ChawlaClinic.BL.ServiceInterfaces;
+using ChawlaClinic.Common.Enums;
+using ChawlaClinic.Common.Exceptions;
+using ChawlaClinic.Common.Requests.Commons;
+using ChawlaClinic.Common.Requests.Patient;
+using ChawlaClinic.Common.Responses.Commons;
+using ChawlaClinic.Common.Responses.Discounts;
+using ChawlaClinic.Common.Responses.Patients;
 using ChawlaClinic.DAL;
 using ChawlaClinic.DAL.Entities;
-using Microsoft.EntityFrameworkCore.Storage;
-using OfficeOpenXml;
-using System.Data.Entity;
-using System.Reflection;
-using System.Transactions;
-using System.Xml.Linq;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Dynamic.Core;
 
 namespace ChawlaClinic.BL.Services
 {
-    public class PatientServiceRepo : IPatientServiceRepo
+    public class PatientServiceRepo(ApplicationDbContext dbContext) : BaseServiceRepo<Patient>(dbContext), IPatientServiceRepo
     {
-        ApplicationDbContext _context;
-        public PatientServiceRepo(ApplicationDbContext context) 
+        public async Task<PaginatedList<PatientResponse>> GetPatients(PagedRequest request)
         {
-            _context = context;
-        }
-        public List<GetPatientDTO>? GetPatients()
-        {
-            var patient_dicounts = _context.PatientDiscounts.ToList();
-            var patients = _context.Patients
-                .Where(p => p.IsDeleted == false)
-                .Select(p => new GetPatientDTO
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    GuardianName = p.GuardianName,
-                    AgeYears = p.AgeYears,
-                    AgeMonths = p.AgeMonths,
-                    Gender = p.Gender,
-                    Type = p.Type,
-                    Disease = p.Disease,
-                    Address = p.Address,
-                    PhoneNumber = p.PhoneNumber,
-                    CaseNo = p.CaseNo,
-                    Status = p.IsActive,
-                    FirstVisit = p.FirstVisit,
-                    DiscountId = p.DiscountId,
-                    Discount = patient_dicounts.Where(pd => pd.Id == p.DiscountId).Select(pd => pd.Title).FirstOrDefault() ?? ""
-                })
-                .ToList();
+            var sorting = request.GetSortingString();
 
-            return patients;
-        }
-        public GetPatientDTO? GetPatientById(string Id)
-        {
-            var patient_dicounts = _context.PatientDiscounts.ToList();
-            var patient = _context.Patients
-                .Where(p => 
-                    p.Id.ToString() == Id &&
-                    p.IsDeleted == false)
-                .Select(p => new GetPatientDTO
+            var query = _dbContext.Patients
+                .AsNoTracking()
+                .Include(x => x.Discount)
+                .Where(x => x.Status != PatientStatus.Deleted.ToString());
+
+            var totalCount = await query.CountAsync();
+
+            var patients = await query
+                .Select(x => new PatientResponse
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    GuardianName = p.GuardianName,
-                    AgeYears = p.AgeYears,
-                    AgeMonths = p.AgeMonths,
-                    Gender = p.Gender,
-                    Type = p.Type,
-                    Disease = p.Disease,
-                    Address = p.Address,
-                    PhoneNumber = p.PhoneNumber,
-                    CaseNo = p.CaseNo,
-                    Status = p.IsActive,
-                    FirstVisit = p.FirstVisit,
-                    DiscountId = p.DiscountId,
-                    Discount = patient_dicounts.Where(pd => pd.Id == p.DiscountId).Select(pd => pd.Title).FirstOrDefault() ?? ""
+                    PatientId = x.PatientId,
+                    Name = x.Name,
+                    Description = x.Description,
+                    GuardianName = x.GuardianName,
+                    AgeYears = x.AgeYears,
+                    AgeMonths = x.AgeMonths,
+                    Gender = x.Gender,
+                    Type = x.Type[0],
+                    Disease = x.Disease,
+                    Address = x.Address,
+                    PhoneNumber = x.PhoneNumber,
+                    CaseNo = x.CaseNo,
+                    Status = x.Status,
+                    FirstVisit = x.FirstVisit,
+                    Discount = x.Discount == null ? null :
+                        new DiscountResponse
+                        {
+                            DiscountId = x.Discount.DiscountId,
+                            Title = x.Discount.Title
+                        }
                 })
-                .FirstOrDefault();
+                .OrderBy($"{request.SortColumn} {sorting}")
+                .Skip((request.Page - 1) * request.Size)
+                .Take(request.Size)
+                .ToListAsync();
+
+            return new PaginatedList<PatientResponse>(patients, totalCount, request.Page, request.Size);
+        }
+
+        public async Task<PatientResponse?> GetPatientById(int patientId)
+        {
+            var patient = await _dbContext.Patients
+                .Include(x => x.Discount)
+                .Where(x => x.PatientId == patientId)
+                .Select(x => new PatientResponse
+                {
+                    PatientId = x.PatientId,
+                    Name = x.Name,
+                    Description = x.Description,
+                    GuardianName = x.GuardianName,
+                    AgeYears = x.AgeYears,
+                    AgeMonths = x.AgeMonths,
+                    Gender = x.Gender,
+                    Type = x.Type[0],
+                    Disease = x.Disease,
+                    Address = x.Address,
+                    PhoneNumber = x.PhoneNumber,
+                    CaseNo = x.CaseNo,
+                    Status = x.Status,
+                    FirstVisit = x.FirstVisit,
+                    Discount = x.Discount == null ? null :
+                        new DiscountResponse
+                        {
+                            DiscountId = x.Discount.DiscountId,
+                            Title = x.Discount.Title
+                        }
+                })
+                .FirstOrDefaultAsync();
+
+            if (patient != null && patient.Status == PatientStatus.Deleted.ToString())
+                throw new BadRequestException($"Patient with ID {patientId} is deleted.");
 
             return patient;
         }
-        public List<GetPatientForSearchDTO>? SearchPatient(string searchParam)
-        {
-            searchParam = searchParam.ToUpper();
 
-            var patient_dicounts = _context.PatientDiscounts.ToList();
-            var patients = _context.Patients
-                .Where(p =>
-                    (p.Name.ToUpper().Contains(searchParam) ||
-                        p.PhoneNumber.ToUpper().Contains(searchParam) ||
-                        p.CaseNo.ToUpper().Contains(searchParam)) &&
-                    p.IsDeleted == false)
-                .Select(p => new GetPatientForSearchDTO
+        public async Task<PaginatedList<PatientSearchResponse>> SearchPatient(SearchPatientRequest request)
+        {
+            var sorting = request.GetSortingString();
+
+            var query = _dbContext.Patients
+                .Where(x =>
+                    x.Status != PatientStatus.Deleted.ToString() &&
+                    (x.Name.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase) ||
+                    x.GuardianName.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase) ||
+                    (x.PhoneNumber != null && x.PhoneNumber.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase)) ||
+                     x.CaseNo.Contains(request.SearchParam, StringComparison.CurrentCultureIgnoreCase)) &&
+                    (request.Type == null || x.Type == ((char)request.Type).ToString()) &&
+                    (request.FirstVisitStart == null || x.FirstVisit >= request.FirstVisitStart) &&
+                    (request.FirstVisitEnd == null || x.FirstVisit <= request.FirstVisitEnd) &&
+                    (request.Status == null || x.Status == request.Status));
+
+            var totalCount = await query.CountAsync();
+
+            var patients = await query
+                .Select(x => new PatientSearchResponse
                 {
-                    Id = p.Id,
-                    Name = p.Name,
-                    CaseNo = p.CaseNo,
-                    Status = p.IsActive,
-                    FirstVisit = p.FirstVisit
+                    PatientId = x.PatientId,
+                    Name = x.Name,
+                    GuardianName = x.GuardianName,
+                    CaseNo = x.CaseNo,
+                    PhoneNumber = x.PhoneNumber,
+                    Status = x.Status,
+                    FirstVisit = x.FirstVisit
                 })
-                .ToList();
+                .OrderBy($"{request.SortColumn} {sorting}")
+                .Skip((request.Page - 1) * request.Size)
+                .Take(request.Size)
+                .ToListAsync();
 
-            return patients;
+            return new PaginatedList<PatientSearchResponse>(patients, totalCount, request.Page, request.Size);
         }
-        public List<GetPatientForSearchDTO>? SearchPatient(SearchPatientFiltersDTO filters)
-        {
-            filters.SearchParam = filters.SearchParam.ToUpper();
 
-            var patient_dicounts = _context.PatientDiscounts.ToList();
-            
-            var patients = _context.Patients
-                .Where(p =>
-                    (p.Name.ToUpper().Contains(filters.SearchParam) ||
-                     p.PhoneNumber.ToUpper().Contains(filters.SearchParam) ||
-                     p.CaseNo.ToUpper().Contains(filters.SearchParam)) &&
-                    (p.Type == filters.Type) &&
-                    (filters.FirstVisitStart == null || p.FirstVisit >= filters.FirstVisitStart) &&
-                    (filters.FirstVisitEnd == null || p.FirstVisit <= filters.FirstVisitEnd) &&
-                    (filters.ActiveStatus == FilterActiveStatus.All || p.IsActive == (filters.ActiveStatus == FilterActiveStatus.Active)) &&
-                    (filters.DeleteStatus == FilterDeleteStatus.All || p.IsDeleted == (filters.DeleteStatus == FilterDeleteStatus.Deleted)))
-                .Select(p => new GetPatientForSearchDTO
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    CaseNo = p.CaseNo,
-                    Status = p.IsActive,
-                    FirstVisit = p.FirstVisit
-                })
-                .Skip(filters.PageNumber * filters.PageSize)
-                .Take(filters.PageSize)
-                .ToList();
-
-            return patients;
-        }
-        public void AddPatient(AddPatientDTO dto)
+        public async Task<int?> AddPatient(CreatePatientRequest request)
         {
-            using (var transaction = _context.Database.BeginTransaction())
+            var firstVisit = request.FirstVisit ?? DateTime.Now;
+
+            if (request.CaseNo != null && ((request.CaseNo.Length == 4 && !int.TryParse(request.CaseNo, out _)) || request.CaseNo.Length != 4))
+                throw new ValidationFailedException("Invalid Case Number.");
+
+            if (string.IsNullOrEmpty(request.CaseNo) || request.CaseNo.Length == 4)
+                request.CaseNo = await GenerateCaseNo(request.Type, firstVisit, request.CaseNo);
+
+            var defaultDiscount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == 1 || x.Title == "None");
+
+            var patientId = await GetSequence();
+
+            await _dbContext.Patients.AddAsync(new Patient
             {
-                try
-                {
-                    string UserId = "";
-                    var addUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
+                PatientId = patientId,
+                Name = request.Name,
+                GuardianName = request.GuardianName,
+                AgeYears = request.AgeYears,
+                AgeMonths = request.AgeMonths,
+                Gender = ((char)request.Gender).ToString(),
+                Type = ((char)request.Type).ToString(),
+                Disease = request.Disease,
+                Address = request.Address,
+                PhoneNumber = request.PhoneNumber,
+                CaseNo = request.CaseNo,
+                FirstVisit = firstVisit,
+                Status = PatientStatus.Active.ToString(),
+                Description = null,
+                DiscountId = defaultDiscount.DiscountId
+            });
 
-                    if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
+            return await _dbContext.SaveChangesAsync() > 0 ? patientId : null;
+        }
 
-                    if (dto.CaseNo == "") { dto.CaseNo = GenerateCaseNo(dto.Type); }
+        public async Task<int?> AddPatient(CreateEmergencyBurnPatientRequest request)
+        {
+            var firstVisit = DateTime.Now;
 
-                    _context.Patients.Add(new Patient
-                    {
-                        Name = dto.Name,
-                        GuardianName = dto.GuardianName,
-                        AgeYears = dto.AgeYears,
-                        AgeMonths = dto.AgeMonths,
-                        Gender = dto.Gender,
-                        Type = dto.Type,
-                        Disease = dto.Disease,
-                        Address = dto.Address,
-                        PhoneNumber = dto.PhoneNumber,
-                        CaseNo = dto.CaseNo,
-                        FirstVisit = dto.FirstVisit,
-                        IsActive = true,
-                        IsDeleted = false,
-                        AddedOn = DateTime.Now,
-                        ModifiedOn = null,
-                        AddedBy = addUserId ?? -1,
-                        ModifiedBy = null
-                    });
+            string caseNo = await GenerateCaseNo('B', firstVisit, null);
 
-                    _context.SaveChanges();
+            var defaultDiscount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == 1 || x.Title == "None");
 
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
+            var patientId = await GetSequence();
 
-                    throw ex;
-                }
+            await _dbContext.Patients.AddAsync(new Patient
+            {
+                PatientId = patientId,
+                Name = request.Name,
+                GuardianName = request.GuardianName,
+                AgeYears = request.AgeYears,
+                AgeMonths = request.AgeMonths,
+                Gender = request.Gender.ToString(),
+                Type = 'B'.ToString(),
+                Disease = null,
+                Address = null,
+                PhoneNumber = null,
+                CaseNo = caseNo,
+                FirstVisit = firstVisit,
+                Status = PatientStatus.Active.ToString(),
+                DiscountId = defaultDiscount.DiscountId,
+            });
+
+            return await _dbContext.SaveChangesAsync() > 0 ? patientId : null;
+        }
+
+        public async Task<bool> UpdatePatient(UpdatePatientRequest request)
+        {
+            var patient = await _dbContext.Patients.Where(x => x.PatientId == request.PatientId).FirstOrDefaultAsync()
+                ?? throw new NotFoundException($"Patient with ID {request.PatientId} was not found.");
+
+            if (patient.Status == PatientStatus.Deleted.ToString())
+                throw new BadRequestException($"Patient with ID {request.PatientId} is deleted.");
+
+            patient.Name = request.Name;
+            patient.GuardianName = request.GuardianName;
+            patient.Description = request.Description;
+            patient.AgeYears = request.AgeYears;
+            patient.AgeMonths = request.AgeMonths;
+            patient.Gender = request.Gender.ToString();
+            patient.Disease = request.Disease;
+            patient.Address = request.Address;
+            patient.PhoneNumber = request.PhoneNumber;
+            patient.FirstVisit = request.FirstVisit;
+            patient.Status = request.Status;
+            patient.DiscountId = request.DiscountId;
+            patient.Discount = await _dbContext.DiscountOptions.FirstAsync(x => x.DiscountId == request.DiscountId);
+
+            return await _dbContext.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeletePatient(int patientId)
+        {
+            var patient = await _dbContext.Patients.Where(x => x.PatientId == patientId).FirstOrDefaultAsync();
+
+            if (patient == null) throw new NotFoundException($"Patient with ID {patientId} was not found.");
+
+            patient.Status = PatientStatus.Deleted.ToString(); // add this new status to check condition in tables
+
+            _dbContext.Patients.Update(patient);
+
+            return await _dbContext.SaveChangesAsync() > 0;
+        }
+
+        private async Task<string> GenerateCaseNo(char type, DateTime firstVisit, string? caseNo)
+        {
+            var newCaseNo = firstVisit.Year.ToString().Substring(2) + type + '-';
+
+            if (string.IsNullOrEmpty(caseNo))
+            {
+                var matchingCaseNos = await _dbContext.Patients
+                    .Where(x => x.CaseNo.StartsWith(newCaseNo))
+                    .Select(x => x.CaseNo.Substring(x.CaseNo.Length - 6))
+                    .ToListAsync();
+
+                var caseNoMax = matchingCaseNos
+                    .Select(x => int.Parse(x))
+                    .Max();
+
+                newCaseNo += (caseNoMax + 1).ToString().PadLeft(6, '0');
             }
-        }
-        public void AddPatient(AddEmergencyBurnPatientDTO dto)
-        {
-            using (var transaction = _context.Database.BeginTransaction())
+            else if (caseNo.Length == 4)
             {
-                try
-                {
-                    string UserId = "";
-                    var addUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
+                var caseNoNext = _dbContext.Patients
+                    .Where(x => x.CaseNo.StartsWith(newCaseNo) && x.CaseNo.EndsWith(caseNo))
+                    .Select(x => int.Parse(x.CaseNo.Substring(x.CaseNo.Length - 6, 2)) + 1)
+                    .AsEnumerable()
+                    .DefaultIfEmpty(0)
+                    .Max();
 
-                    if (addUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
+                if (caseNoNext == 99)
+                    throw new BadRequestException("Already maximum number of case numbers exists for the last 4 digits of token number provided.");
 
-                    char type = 'B';
-                    string caseNo = GenerateCaseNo(type);
-
-                    _context.Patients.Add(new Patient
-                    {
-                        Name = dto.Name,
-                        GuardianName = dto.GuardianName,
-                        AgeYears = dto.AgeYears,
-                        AgeMonths = dto.AgeMonths,
-                        Gender = dto.Gender,
-                        Type = type,
-                        Disease = "",
-                        Address = "",
-                        PhoneNumber = "",
-                        CaseNo = caseNo,
-                        FirstVisit = DateOnly.FromDateTime(DateTime.Now),
-                        IsActive = true,
-                        IsDeleted = false,
-                        AddedOn = DateTime.Now,
-                        ModifiedOn = null,
-                        AddedBy = addUserId ?? -1,
-                        ModifiedBy = null
-                    });
-
-                    _context.SaveChanges();
-
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-
-                    throw ex;
-                }
-            }
-        }
-        public void AddPatient(IFormFile excelFile)
-        {
-            var patientDtos = ParseExcelFile(excelFile);
-        }
-        public (bool, string) UpdatePatient(UpdatePatientDTO dto)
-        {
-            using (var transaction = _context.Database.BeginTransaction())
-            {
-                try
-                {
-                    string UserId = "";
-                    var updateUserId = _context.Users.Where(u => u.Id.ToString() == UserId).FirstOrDefault()?.Id;
-
-                    if (updateUserId == null) { throw new Exception(string.Format(CustomMessage.NOT_FOUND, "User")); }
-
-                    var patient = _context.Patients.Where(p => p.Id.ToString() == dto.Id).FirstOrDefault();
-
-                    if(patient == null) { return (false, string.Format(CustomMessage.NOT_FOUND, "Patient")); }
-
-                    if (dto.CaseNo == "") { dto.CaseNo = GenerateCaseNo(dto.Type); }
-
-                    patient.Name = dto.Name;
-                    patient.GuardianName = dto.GuardianName;
-                    patient.AgeYears = dto.AgeYears;
-                    patient.AgeMonths = dto.AgeMonths;
-                    patient.Gender = dto.Gender;
-                    patient.Disease = dto.Disease;
-                    patient.Address = dto.Address;
-                    patient.PhoneNumber = dto.PhoneNumber;
-                    patient.FirstVisit = dto.FirstVisit;
-                    patient.ModifiedOn = DateTime.Now;
-                    patient.ModifiedBy = updateUserId ?? -1;
-
-                    _context.SaveChanges();
-
-                    transaction.Commit();
-
-                    return (true, string.Format(CustomMessage.UPDATED_SUCCESSFULLY, "Patient"));
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-
-                    throw ex;
-                }
-            }
-        }
-        public bool DeletePatient(string Id)
-        {
-            using (var transaction = _context.Database.BeginTransaction())
-            {
-                try
-                {
-                    var patient = _context.Patients.Where(p => p.Id.ToString() == Id).FirstOrDefault();
-
-                    if (patient == null) { return false; }
-
-                    patient.IsActive = false;
-                    patient.IsDeleted = true;
-
-                    _context.SaveChanges();
-
-                    transaction.Commit();
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-
-                    throw ex;
-                }
-            }
-        }
-
-        private string GenerateCaseNo(char type)
-        {
-            return "";
-        }
-        private List<AddPatientDTO>? ParseExcelFile(IFormFile excelFile)
-        {
-            var patients = new List<AddPatientDTO>();
-
-            using (var stream = excelFile.OpenReadStream())
-            {
-                using (var package = new ExcelPackage(stream))
-                {
-                    var worksheet = package.Workbook.Worksheets[0];
-
-                    int startRow = 2;
-
-                    for (int row = startRow; row <= worksheet.Dimension.End.Row; row++)
-                    {
-                        var patient = new AddPatientDTO
-                        {
-                            Name = worksheet.Cells[row, 1].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
-                            GuardianName = worksheet.Cells[row, 2].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
-                            AgeYears = Convert.ToInt32(worksheet.Cells[row, 3].Value),
-                            AgeMonths = Convert.ToInt32(worksheet.Cells[row, 4].Value),
-                            Gender = worksheet.Cells[row, 5].Value?.ToString()[0] ?? throw new Exception("Error parsing Excel file"),
-                            Type = worksheet.Cells[row, 6].Value?.ToString()[0] ?? throw new Exception("Error parsing Excel file"),
-                            Disease = worksheet.Cells[row, 7].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
-                            Address = worksheet.Cells[row, 8].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
-                            PhoneNumber = worksheet.Cells[row, 9].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
-                            CaseNo = worksheet.Cells[row, 10].Value?.ToString() ?? throw new Exception("Error parsing Excel file"),
-                            FirstVisit = DateOnly.Parse(worksheet.Cells[row, 11].Value?.ToString() ?? throw new Exception("Error parsing Excel file"))
-                        };
-
-                        patients.Add(patient);
-                    }
-                }
+                newCaseNo = newCaseNo + caseNoNext.ToString("D2") + caseNo;
             }
 
-            return patients;
+            return newCaseNo;
         }
     }
 }

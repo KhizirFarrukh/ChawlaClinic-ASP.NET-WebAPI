@@ -1,18 +1,25 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 
-namespace ChawlaClinic.DAL.Entities
+namespace ChawlaClinic.DAL.Entities;
+
+public partial class Payment
 {
-    public class Payment : Base_ID_GUID
-    {
-        public int AmountPaid { get; set; }
-        public DateOnly PaymentDate { get; set; }
+    public int PaymentId { get; set; }
 
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int TokenID { get; set; }
-        public string SecureToken { get; set; } = string.Empty;
+    public string Code { get; set; } = null!;
 
-        [ForeignKey("Patient")]
-        public Guid PatientId { get; set; }
-        public virtual Patient? Patient { get; set; }
-    }
+    public int AmountPaid { get; set; }
+
+    public DateTime DateTime { get; set; }
+
+    public int PatientId { get; set; }
+
+    public int DiscountId { get; set; }
+
+    public string Status { get; set; } = null!;
+
+    public virtual DiscountOption Discount { get; set; } = null!;
+
+    public virtual Patient Patient { get; set; } = null!;
 }

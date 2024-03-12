@@ -1,8 +1,7 @@
-﻿using ChawlaClinic.API.Models;
-using ChawlaClinic.BL.DTOs.Patient;
-using ChawlaClinic.BL.ServiceInterfaces;
-using ChawlaClinic.Common.Commons;
-using ChawlaClinic.DAL.Entities;
+﻿using ChawlaClinic.BL.ServiceInterfaces;
+using ChawlaClinic.Common.Exceptions;
+using ChawlaClinic.Common.Requests.Commons;
+using ChawlaClinic.Common.Requests.Patient;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChawlaClinic.API.Controllers
@@ -16,119 +15,154 @@ namespace ChawlaClinic.API.Controllers
         }
 
         [HttpGet("GetPatients")]
-        public IActionResult GetPatients()
+        public async Task<IActionResult> GetPatients([FromQuery] int? size, int? page, bool? isAscending, string? sortColumn)
         {
             try
             {
-                var patients = _patientRepo.GetPatients();
-                return Ok(new JSONResponse { Status = true, Data = patients });
+                return Ok(await _patientRepo.GetPatients(new PagedRequest(size: size, page: page, isAscending: isAscending, sortColumn: sortColumn ?? "CaseNo")));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
             }
         }
 
         [HttpGet("GetPatientById")]
-        public IActionResult GetPatientById(string Id)
+        public async Task<IActionResult> GetPatientById(int patientId)
         {
             try
             {
-                var patient = _patientRepo.GetPatientById(Id);
-                string message = "";
-                bool status = true;
-
-                if(patient == null)
-                {
-                    message = string.Format(CustomMessage.NOT_FOUND, "Patient");
-                }
-
-                return Ok(new JSONResponse { Status = status, Data = patient, Message = message });
+                return Ok(await _patientRepo.GetPatientById(patientId));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
             }
         }
 
         [HttpGet("SearchPatient")]
-        public IActionResult SearchPatient(string searchParam)
+        public async Task<IActionResult> SearchPatient(SearchPatientRequest request)
         {
             try
             {
-                var patients = _patientRepo.SearchPatient(searchParam);
-
-                return Ok(new JSONResponse { Status = true, Data = patients });
+                return Ok(await _patientRepo.SearchPatient(request));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
-            }
-        }
-
-        [HttpGet("SearchPatientWithFilters")]
-        public IActionResult SearchPatientWithFilters(SearchPatientFiltersDTO filters)
-        {
-            try
-            {
-                var patients = _patientRepo.SearchPatient(filters);
-
-                return Ok(new JSONResponse { Status = true, Data = patients });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
             }
         }
 
         [HttpPost("AddPatient")]
-        public IActionResult AddPatient(AddPatientDTO dto)
+        public async Task<IActionResult> AddPatient([FromBody] CreatePatientRequest request)
         {
             try
             {
-                _patientRepo.AddPatient(dto);
-
-                return Ok(new JSONResponse { Status = true, Message = string.Format(CustomMessage.ADDED_SUCCESSFULLY, "Patient") });
+                return Ok(await _patientRepo.AddPatient(request));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
             }
         }
 
         [HttpPost("AddEmergencyBurnPatient")]
-        public IActionResult AddEmergencyBurnPatient(AddEmergencyBurnPatientDTO dto)
+        public async Task<IActionResult> AddEmergencyBurnPatient([FromBody] CreateEmergencyBurnPatientRequest request)
         {
             try
             {
-                _patientRepo.AddPatient(dto);
-
-                return Ok(new JSONResponse { Status = true, Message = string.Format(CustomMessage.ADDED_SUCCESSFULLY, "Emergency Burn Patient") });
+                return Ok(await _patientRepo.AddPatient(request));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
             }
         }
 
-        [HttpPost("AddBulkPatients")]
-        public IActionResult AddBulkPatients([FromForm(Name = "excelFile")] IFormFile excelFile)
+        [HttpPut("UpdatePatient")]
+        public async Task<IActionResult> UpdatePatient([FromBody] UpdatePatientRequest request)
         {
             try
             {
-                if (excelFile == null)
-                {
-                    return Ok(new JSONResponse { Status = false, Message = string.Format(CustomMessage.NOT_FOUND, "Excel file") });
-                }
-
-                _patientRepo.AddPatient(excelFile);
-
-                return Ok(new JSONResponse { Status = true, Message = string.Format(CustomMessage.ADDED_SUCCESSFULLY, "Emergency Burn Patient") });
+                return Ok(await _patientRepo.UpdatePatient(request));
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (BadRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ValidationFailedException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                return Ok(new JSONResponse { Status = false, ErrorMessage = ex.Message, ErrorDescription = ex?.InnerException?.ToString() ?? string.Empty });
+                return StatusCode(500, ex.InnerException?.Message ?? ex.Message);
             }
         }
+
     }
 }

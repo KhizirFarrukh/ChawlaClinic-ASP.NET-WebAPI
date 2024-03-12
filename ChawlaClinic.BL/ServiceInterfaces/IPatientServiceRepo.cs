@@ -1,17 +1,18 @@
-﻿using ChawlaClinic.BL.DTOs.Patient;
+﻿using ChawlaClinic.Common.Requests.Commons;
+using ChawlaClinic.Common.Requests.Patient;
+using ChawlaClinic.Common.Responses.Commons;
+using ChawlaClinic.Common.Responses.Patients;
 
 namespace ChawlaClinic.BL.ServiceInterfaces
 {
     public interface IPatientServiceRepo
     {
-        List<GetPatientDTO>? GetPatients();
-        GetPatientDTO? GetPatientById(string Id);
-        List<GetPatientForSearchDTO>? SearchPatient(string searchParam);
-        List<GetPatientForSearchDTO>? SearchPatient(SearchPatientFiltersDTO filters);
-        void AddPatient(AddPatientDTO dto);
-        void AddPatient(AddEmergencyBurnPatientDTO dto);
-        void AddPatient(IFormFile excelFile);
-        (bool, string) UpdatePatient(UpdatePatientDTO dto);
-        bool DeletePatient(string Id);
+        Task<int?> AddPatient(CreatePatientRequest request);
+        Task<int?> AddPatient(CreateEmergencyBurnPatientRequest request);
+        Task<bool> DeletePatient(int patientId);
+        Task<PatientResponse?> GetPatientById(int PatientId);
+        Task<PaginatedList<PatientResponse>> GetPatients(PagedRequest request);
+        Task<PaginatedList<PatientSearchResponse>> SearchPatient(SearchPatientRequest filters);
+        Task<bool> UpdatePatient(UpdatePatientRequest request);
     }
 }

@@ -6,7 +6,8 @@ namespace ChawlaClinic.Common.Helpers
     public class CommonHelper
     {
         private static int HashSize = 32;
-        private static int SaltSize = 16;
+        private static int SaltSize = 32;
+
         public static (byte[], byte[]) PasswordHashSalt(string password)
         {
             byte[] salt = GenerateSalt();
@@ -43,9 +44,7 @@ namespace ChawlaClinic.Common.Helpers
 
             int randomValue = random.Next((int)Math.Pow(36,length));
 
-            string base36Value = IntToBase36(randomValue).PadLeft(length, '0');
-
-            return base36Value;
+            return IntToBase36(randomValue).PadLeft(length, '0');
         }
 
         private static string IntToBase36(long value)
@@ -63,15 +62,13 @@ namespace ChawlaClinic.Common.Helpers
             return result;
         }
 
-        public static string GenerateSecureToken(int value)
+        public static string GenerateSecureCode(int value)
         {
-            string base36AutoIncremented = IntToBase36(value).PadLeft(3, '0');
+            string base36AutoIncremented = IntToBase36(value);
 
             string randomBase36 = GenerateRandomBase36String(3);
 
-            string secureToken = base36AutoIncremented + randomBase36;
-
-            return secureToken;
+            return base36AutoIncremented + randomBase36;
         }
     }
 }

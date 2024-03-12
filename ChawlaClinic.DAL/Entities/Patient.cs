@@ -1,28 +1,41 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 
-namespace ChawlaClinic.DAL.Entities
+namespace ChawlaClinic.DAL.Entities;
+
+public partial class Patient
 {
-    public class Patient : Base_ID_GUID
-    {
-        public string Name { get; set; } = string.Empty;
-        public string GuardianName { get; set; } = string.Empty;
-        public int AgeYears { get; set; }
-        public int AgeMonths { get; set; }
-        public char Gender { get; set; } = char.MinValue;
-        public string Address { get; set; } = string.Empty;
-        public string PhoneNumber { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string CaseNo { get; set; } = string.Empty;
-        public char Type { get; set; } = char.MinValue;
-        public string Disease { get; set; } = string.Empty;
-        public DateOnly FirstVisit { get; set; }
+    public int PatientId { get; set; }
 
-        public ICollection<Payment>? Payments { get; set; }
+    public string CaseNo { get; set; } = null!;
 
-        [ForeignKey("PatientDiscount")]
-        public int? DiscountId { get; set; }
+    public string Type { get; set; } = null!;
 
-        public PatientDiscount? PatientDiscount { get; set; }
-    }
+    public string Name { get; set; } = null!;
+
+    public int AgeYears { get; set; }
+
+    public int AgeMonths { get; set; }
+
+    public string Gender { get; set; } = null!;
+
+    public string GuardianName { get; set; } = null!;
+
+    public string? Disease { get; set; }
+
+    public string? Address { get; set; }
+
+    public string? PhoneNumber { get; set; }
+
+    public string Status { get; set; } = null!;
+
+    public DateTime FirstVisit { get; set; }
+
+    public int DiscountId { get; set; }
+
+    public string? Description { get; set; }
+
+    public virtual DiscountOption Discount { get; set; } = null!;
+
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }
