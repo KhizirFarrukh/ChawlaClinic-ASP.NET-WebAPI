@@ -7,8 +7,8 @@ namespace ChawlaClinic.BL.ServiceInterfaces
 {
     public interface IPatientServiceRepo
     {
-        Task<bool> AddPatient(CreatePatientRequest request);
-        Task<bool> AddPatient(CreateEmergencyBurnPatientRequest request);
+        Task<int?> AddPatient(CreatePatientRequest request);
+        Task<int?> AddPatient(CreateEmergencyBurnPatientRequest request);
         Task<bool> DeletePatient(int patientId);
         Task<PatientResponse?> GetPatientById(int PatientId);
         Task<PaginatedList<PatientResponse>> GetPatients(PagedRequest request);

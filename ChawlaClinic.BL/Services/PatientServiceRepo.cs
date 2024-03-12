@@ -131,7 +131,7 @@ namespace ChawlaClinic.BL.Services
             return new PaginatedList<PatientSearchResponse>(patients, totalCount, request.Page, request.Size);
         }
 
-        public async Task<bool> AddPatient(CreatePatientRequest request)
+        public async Task<int?> AddPatient(CreatePatientRequest request)
         {
             var firstVisit = request.FirstVisit ?? DateTime.Now;
 
@@ -164,10 +164,10 @@ namespace ChawlaClinic.BL.Services
                 DiscountId = defaultDiscount.DiscountId
             });
 
-            return await _dbContext.SaveChangesAsync() > 0;
+            return await _dbContext.SaveChangesAsync() > 0 ? patientId : null;
         }
 
-        public async Task<bool> AddPatient(CreateEmergencyBurnPatientRequest request)
+        public async Task<int?> AddPatient(CreateEmergencyBurnPatientRequest request)
         {
             var firstVisit = DateTime.Now;
 
@@ -195,7 +195,7 @@ namespace ChawlaClinic.BL.Services
                 DiscountId = defaultDiscount.DiscountId,
             });
 
-            return await _dbContext.SaveChangesAsync() > 0;
+            return await _dbContext.SaveChangesAsync() > 0 ? patientId : null;
         }
 
         public async Task<bool> UpdatePatient(UpdatePatientRequest request)
